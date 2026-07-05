@@ -246,8 +246,7 @@ class MainActivity : AppCompatActivity() {
         val request = androidx.work.OneTimeWorkRequestBuilder<com.azzam.receiptscanner.processing.BatchScanWorker>()
             .setInputData(
                 androidx.work.workDataOf(
-                    com.azzam.receiptscanner.processing.BatchScanWorker.KEY_TREE_URI,
-                    folderUri.toString()
+                    com.azzam.receiptscanner.processing.BatchScanWorker.KEY_TREE_URI to folderUri.toString()
                 )
             )
             .build()
