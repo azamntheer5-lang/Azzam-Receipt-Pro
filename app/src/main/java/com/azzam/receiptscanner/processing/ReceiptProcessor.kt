@@ -76,7 +76,8 @@ object ReceiptProcessor {
 
         // ===== عتبة الحفظ المشددة =====
         // لا تحفظ سجلاً بلا مبلغ موثوق، إلا إن كان فيه اسم + تاريخ صالح
-        val hasValidAmount = fields?.amount != null && fields.amount >= 1.0
+        val amountValue = fields?.amount
+        val hasValidAmount = amountValue != null && amountValue >= 1.0
         val hasValidDate = fields?.date != null
         val hasName = !fields?.senderName.isNullOrBlank() || !fields?.recipientName.isNullOrBlank()
 
