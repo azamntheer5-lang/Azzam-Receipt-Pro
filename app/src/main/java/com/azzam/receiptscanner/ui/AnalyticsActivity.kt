@@ -78,7 +78,7 @@ class AnalyticsActivity : AppCompatActivity() {
         lifecycleScope.launch { renderDashboard() }
     }
 
-    private fun renderDashboard() {
+    private suspend fun renderDashboard() {
         val transfers = TransferRepository.transfers.value
         val dao = AppDatabase.get(this).receiptDao()
         val bankTotals = dao.totalsByBank()
