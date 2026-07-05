@@ -1,0 +1,58 @@
+<resources>
+    <!-- ============================================================
+         نظام ألوان "Financial Elegance" (إعادة تصميم جذري)
+         فلسفة: أخضر زمردي عميق + ذهبي للمبالغ (إحساس بنكي فاخر)
+         ============================================================ -->
+
+    <!-- اللون الأساسي: زمردي عميق -->
+    <color name="primary">#0F5132</color>
+    <color name="primary_dark">#063D26</color>
+    <color name="primary_light">#2E7D52</color>
+
+    <!-- اللون الثانوي: ذهبي للمبالغ (إحساس فاخر) -->
+    <color name="accent">#C9A227</color>
+    <color name="accent_light">#E6C547</color>
+    <color name="accent_dark">#8B6F1A</color>
+
+    <!-- الخلفيات: طبقات رمادية ناعمة -->
+    <color name="background">#F7F9FA</color>
+    <color name="background_dark">#EEF2F4</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="surface_elevated">#FFFFFF</color>
+
+    <!-- النصوص -->
+    <color name="text_primary">#0A1929</color>
+    <color name="text_secondary">#5A6B7B</color>
+    <color name="text_hint">#9AAAB9</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_on_accent">#1A1300</color>
+
+    <!-- الحدود والفواصل -->
+    <color name="divider">#E3E8EC</color>
+    <color name="border_subtle">#EFF3F5</color>
+
+    <!-- ألوان شارات الثقة (مكرّرة) -->
+    <color name="confidence_high">#0F7B4F</color>
+    <color name="confidence_medium">#D97706</color>
+    <color name="confidence_low">#DC2626</color>
+
+    <!-- ألوان شارة الدور -->
+    <color name="role_sender_bg">#E0EAF3</color>
+    <color name="role_sender_text">#1565C0</color>
+    <color name="role_recipient_bg">#E0F2E9</color>
+    <color name="role_recipient_text">#0F5132</color>
+    <color name="role_both_bg">#FFF4E0</color>
+    <color name="role_both_text">#8B6F1A</color>
+
+    <!-- تدرّج الهيرو (بطاقة الإحصائيات الرئيسية) -->
+    <color name="hero_gradient_start">#0F5132</color>
+    <color name="hero_gradient_end">#063D26</color>
+
+    <!-- تدرّج الذهب للمبالغ المميزة -->
+    <color name="gold_gradient_start">#E6C547</color>
+    <color name="gold_gradient_end">#C9A227</color>
+
+    <!-- خلفية شفافة للطبقات الزجاجية -->
+    <color name="glass_overlay">#33FFFFFF</color>
+    <color name="shadow_soft">#14000000</color>
+</resources>
