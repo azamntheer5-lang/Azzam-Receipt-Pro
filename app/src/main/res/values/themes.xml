@@ -49,13 +49,13 @@
         <item name="android:textColor">@color/text_hint</item>
     </style>
 
-    <!-- زر ذهبي مميز -->
+    <!-- زر accent مميز (Minimalist) -->
     <style name="Widget.GoldButton" parent="Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@color/gold_gradient_start</item>
+        <item name="backgroundTint">@color/accent</item>
         <item name="android:textColor">@color/text_on_accent</item>
         <item name="android:textStyle">bold</item>
-        <item name="cornerRadius">16dp</item>
-        <item name="elevation">4dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="elevation">0dp</item>
     </style>
 
     <!-- بطاقة حديثة بارتفاع ناعم -->
