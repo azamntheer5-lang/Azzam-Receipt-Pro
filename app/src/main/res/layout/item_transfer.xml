@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  بطاقة السجل (إعادة تصميم جذري - "Financial Elegance")
+  التصميم:
+   - شريط جانبي ملوّن حسب الثقة (أخضر/برتقالي/أحمر)
+   - تخطيط أفقي: المعلومات يميناً + المبلغ يساراً
+   - سهم اتجاه (من ← إلى) بدل تسميات نصية
+   - شارة المحرك + المصدر في الأسفل
+   - زوايا 20dp + ظل ناعم + حد رفيع
+-->
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="2dp"
+    app:strokeColor="@color/border_subtle"
+    app:strokeWidth="1dp"
+    app:cardBackgroundColor="@color/card_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- ===== الشريط الجانبي للثقة (لون حسب المستوى) ===== -->
+        <View
+            android:id="@+id/confidenceStrip"
+            android:layout_width="6dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/confidence_strip" />
+
+        <!-- ===== المحتوى ===== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <!-- العمود الأيمن: الأسماء + التاريخ -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- صف المرسل -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/textSender"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold"
+                        android:maxWidth="120dp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        tools:text="أحمد محمد" />
+
+                    <!-- سهم الاتجاه -->
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:src="@drawable/ic_direction_arrow" />
+
+                    <TextView
+                        android:id="@+id/textRecipient"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="15sp"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
+                        android:maxWidth="120dp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        tools:text="شركة التقنية" />
+                </LinearLayout>
+
+                <!-- سطر التاريخ + البنك -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/textDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        tools:text="2024-05-12" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="•"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_hint" />
+
+                    <TextView
+                        android:id="@+id/textBank"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        tools:text="al_rajhi" />
+                </LinearLayout>
+
+                <!-- سطر المصدر + شارة المحرك -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/textSource"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="10sp"
+                        android:textColor="@color/text_hint"
+                        android:maxWidth="160dp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:visibility="gone"
+                        tools:text="📷 IMG-20240512.jpg" />
+
+                    <TextView
+                        android:id="@+id/textEngine"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:textSize="9sp"
+                        android:background="@drawable/bg_search_rounded"
+                        android:textColor="@color/primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:text="gemini" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- العمود الأيسر: المبلغ + شارة الثقة -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/textAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/accent_dark"
+                    tools:text="1,234.56" />
+
+                <TextView
+                    android:id="@+id/textCurrency"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_hint"
+                    android:text="@string/currency_sar" />
+
+                <TextView
+                    android:id="@+id/textConfidence"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textSize="9sp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:text="راجع" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

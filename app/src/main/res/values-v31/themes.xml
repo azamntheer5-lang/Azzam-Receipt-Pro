@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ثيم Splash لـ Android 12+ (API 31): أيقونة على خلفية زمردي -->
+    <style name="Theme.ReceiptScanner.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/primary</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_receipt_modern</item>
+        <item name="postSplashScreenTheme">@style/Theme.ReceiptScanner</item>
+    </style>
+</resources>
