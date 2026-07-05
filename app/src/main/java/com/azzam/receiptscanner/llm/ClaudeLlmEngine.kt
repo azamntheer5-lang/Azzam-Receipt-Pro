@@ -23,9 +23,6 @@ class ClaudeLlmEngine : LlmEngine {
     override val engineId = "claude"
     override val displayName = "Claude (Anthropic)"
 
-    private const val API_URL = "https://api.anthropic.com/v1/messages"
-    private const val MODEL = "claude-sonnet-5"
-
     private val client = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(45, TimeUnit.SECONDS)
@@ -59,8 +56,9 @@ class ClaudeLlmEngine : LlmEngine {
                 client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) return@withContext null
                     val responseText = response.body?.string() ?: return@withContext null
-                    val content = Json.parseToJsonElement(responseText).jsonObject
-                        ["content"]?.jsonArray ?: return@withContext null
+                    val content = Json.parseToJsonElement(responseText)
+                        .jsonObject["content"]?.jsonArray
+                        ?: return@withContext null
                     // Claude يُرجع مصفوفة من blocks؛ نجمّع نصها
                     val text = content.joinToString("") { block ->
                         val obj = block.jsonObject
@@ -74,4 +72,9 @@ class ClaudeLlmEngine : LlmEngine {
                 null
             }
         }
+
+    companion object {
+        private const val API_URL = "https://api.anthropic.com/v1/messages"
+        private const val MODEL = "claude-sonnet-5"
+    }
 }

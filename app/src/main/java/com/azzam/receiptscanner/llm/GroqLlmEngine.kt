@@ -25,9 +25,6 @@ class GroqLlmEngine : LlmEngine {
     override val engineId = "groq"
     override val displayName = "Groq (Llama)"
 
-    private const val API_URL = "https://api.groq.com/openai/v1/chat/completions"
-    private const val MODEL = "llama-3.3-70b-versatile"
-
     private val client = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(45, TimeUnit.SECONDS)
@@ -77,4 +74,9 @@ class GroqLlmEngine : LlmEngine {
     /** يُرجع تمثيل JSON صالح للسلسلة (مع علامات اقتباس وتهريب). */
     private fun escapeJson(s: String): String =
         kotlinx.serialization.json.JsonPrimitive(s).toString()
+
+    companion object {
+        private const val API_URL = "https://api.groq.com/openai/v1/chat/completions"
+        private const val MODEL = "llama-3.3-70b-versatile"
+    }
 }

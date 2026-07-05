@@ -24,10 +24,6 @@ class GeminiLlmEngine : LlmEngine {
     override val engineId = "gemini"
     override val displayName = "Gemini (Google)"
 
-    private const val API_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
-    private const val MODEL_REF = "gemini-1.5-flash"
-
     private val client = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(45, TimeUnit.SECONDS)
@@ -82,4 +78,10 @@ class GeminiLlmEngine : LlmEngine {
     /** يُرجع تمثيل JSON صالح للسلسلة (مع علامات اقتباس وتهريب). */
     private fun escapeJson(s: String): String =
         kotlinx.serialization.json.JsonPrimitive(s).toString()
+
+    companion object {
+        private const val API_URL =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
+        private const val MODEL_REF = "gemini-1.5-flash"
+    }
 }

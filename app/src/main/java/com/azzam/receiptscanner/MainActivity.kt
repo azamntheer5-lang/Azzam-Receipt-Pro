@@ -105,7 +105,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // تثبيت شاشة البداية (Android 12+) قبل أي شيء
-        androidx.core.splashscreen.SplashScreen.installSplashScreen(this)
+        // installSplashScreen هي دالة امتداد على Activity من companion object
+        androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen(this)
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)

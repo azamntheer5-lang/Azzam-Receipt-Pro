@@ -28,10 +28,6 @@ class HuggingFaceLlmEngine : LlmEngine {
     override val engineId = "huggingface"
     override val displayName = "Hugging Face"
 
-    private const val API_URL = "https://router.huggingface.co/v1/chat/completions"
-    // نموذج chat متاح شائع على HF Inference — قابل للتغيير حسب التوفر
-    private const val MODEL = "meta-llama/Llama-3.1-8B-Instruct"
-
     private val client = OkHttpClient.Builder()
         .connectTimeout(25, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS) // HF أبطأ أحياناً
@@ -82,4 +78,10 @@ class HuggingFaceLlmEngine : LlmEngine {
     /** يُرجع تمثيل JSON صالح للسلسلة (مع علامات اقتباس وتهريب). */
     private fun escapeJson(s: String): String =
         kotlinx.serialization.json.JsonPrimitive(s).toString()
+
+    companion object {
+        private const val API_URL = "https://router.huggingface.co/v1/chat/completions"
+        // نموذج chat متاح شائع على HF Inference — قابل للتغيير حسب التوفر
+        private const val MODEL = "meta-llama/Llama-3.1-8B-Instruct"
+    }
 }
