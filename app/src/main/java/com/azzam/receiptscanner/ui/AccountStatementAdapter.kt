@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.azzam.receiptscanner.R
 import com.azzam.receiptscanner.data.entity.AccountStatement
 import com.azzam.receiptscanner.databinding.ItemAccountStatementBinding
 import java.text.NumberFormat

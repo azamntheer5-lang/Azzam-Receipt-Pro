@@ -117,15 +117,10 @@ class TransferAdapter(
         }
     }
 
-    /** نوع مساعد لإرجاع 4 قيم معاً. */
+    /** نوع مساعد لإرجاع 4 قيم معاً (data class يولّد componentN تلقائياً). */
     private data class Quad<A, B, C, D>(
         val first: A, val second: B, val third: C, val fourth: D
-    ) {
-        operator fun component1() = first
-        operator fun component2() = second
-        operator fun component3() = third
-        operator fun component4() = fourth
-    }
+    )
 
     object DiffCallback : DiffUtil.ItemCallback<Transfer>() {
         override fun areItemsTheSame(oldItem: Transfer, newItem: Transfer) =
