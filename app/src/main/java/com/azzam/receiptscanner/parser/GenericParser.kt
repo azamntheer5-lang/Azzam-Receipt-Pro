@@ -3,9 +3,11 @@ package com.azzam.receiptscanner.parser
 /**
  * خط الدفاع الأخير: يُستخدم عندما لا يتطابق النص مع أي بنك معروف.
  *
- * التطوير (المرحلة 1): استخدام FieldExtractors المشترك، وإضافة محاولة
- * استخراج الأسماء عبر التسميات الشائعة (كانت تُرجع null دائماً). كما
- * يوحّد صيغة التاريخ الآن إلى yyyy-MM-dd.
+ * إصلاح جوهري: تشديد كبير لمنع false positives:
+ *  - لا يقبل أي رقم بكسور (كان يلتقط أسعار المنتجات والتواريخ)
+ *  - يشترط وجود عملة صريحة (SAR/ر.س) أو تسمية مبلغ
+ *  - لا يحفظ سجلاً بمبلغ < 1.0 أو > 10,000,000
+ *  - الأسماء: يحاول استخراجها فقط عبر التسميات، لا يخمن
  */
 class GenericParser : BankReceiptParser {
     override val bankId = "generic"
@@ -13,15 +15,16 @@ class GenericParser : BankReceiptParser {
     override fun matches(text: String) = true
 
     override fun parse(text: String): ParsedFields? {
-        val amount = FieldExtractors.extractAmount(text)
+        // المبلغ الآن صارم: يجب أن يكون مرتبطاً بعملة/تسمية
+        val amount = FieldExtractors.extractAmount(text) ?: return null
+
         val date = FieldExtractors.extractDate(text)
 
-        // بدون مبلغ أو تاريخ، لا فائدة من السجل
-        if (amount == null && date == null) return null
-
+        // الأسماء: نحاول فقط عبر التسميات الواضحة، لا نخمن
         val sender = FieldExtractors.extractNameByLabels(text, FieldExtractors.SENDER_LABELS)
         val recipient = FieldExtractors.extractNameByLabels(text, FieldExtractors.RECIPIENT_LABELS)
 
+        // بدون مبلغ موثوق (مرتبط بعملة)، لا نُرجع بيانات
         return ParsedFields(
             senderName = sender,
             recipientName = recipient,

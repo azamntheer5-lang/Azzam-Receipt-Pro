@@ -1,4 +1,4 @@
-package com.azzam.receiptscanner.processing
+package com.example.receiptscanner.processing
 
 import android.content.Context
 import android.graphics.BitmapFactory
@@ -16,14 +16,13 @@ import java.util.UUID
 
 /**
  * خط المعالجة الكامل لملف واحد:
- * فلترة -> OCR محلي -> Regex -> (عند الحاجة فقط) Multi-LLM كطبقة ثانية -> حفظ.
+ * فلترة النوع/الحجم → OCR → فلتر المحتوى → Regex → (عند الحاجة) LLM → حفظ.
  *
- * التطوير (المرحلة 2): يستبدل CloudExtractor (محرك Claude وحيد) بنظام
- * Multi-LLM عبر [LlmManager]. المحرك النشط ومفتاحه يُحدّدان من الإعدادات،
- * والـ System Prompt الموحّد يُطبّق على جميع المحركات.
- *
- * قابل للاستدعاء بأمان من مصادر متعددة (الخدمة الفورية، المسح الدوري،
- * زر "مسح الآن") لأن كل خطوة idempotent.
+ * إصلاح جوهري: أضفنا فلتر المحتوى [FileFilter.looksLikeReceipt] بعد OCR
+ * لمنع معالجة الملفات غير الإيصالية (ميمز/صور شخصية/مستندات عادية).
+ * كما رفعنا عتبة الحفظ: لا يُحفظ سجل إلا بـ:
+ *  - مبلغ موثوق (مرتبط بعملة) > 1.0، OR
+ *  - تاريخ صالح غير مستقبلي + على الأقل اسم واحد
  */
 object ReceiptProcessor {
 
@@ -36,13 +35,19 @@ object ReceiptProcessor {
         if (ProcessedFilesTracker.isProcessed(context, key)) return
         if (!FileFilter.isCandidateReceipt(file)) return
 
-        // علّم كمعالَج فوراً لمنع سباق (race) بين المسح الفوري والدوري لنفس الملف
+        // علّم كمعالَج فوراً لمنع سباق
         ProcessedFilesTracker.markProcessed(context, key)
 
         val ocrText = try {
             extractText(file)
         } catch (e: Exception) {
-            "" // فشل القراءة — أكمل، فقد يظل الاستخراج السحابي ممكناً
+            ""
+        }
+
+        // ===== فلتر المحتوى الجوهري =====
+        // لا تعالج الملف إن لم يبدُ كإيصال حوالة (كلمات مفتاحية/مبلغ/IBAN)
+        if (ocrText.isBlank() || !FileFilter.looksLikeReceipt(ocrText)) {
+            return // تجاهل بهدوء: ميمز/صورة شخصية/مستند عادي
         }
 
         var bankId = "unknown"
@@ -53,15 +58,13 @@ object ReceiptProcessor {
             fields = extraction?.second
         }
 
-        // نحتاج مساعدة LLM إذا لم نحصل على مبلغ، أو حصلنا على مبلغ لكن
-        // بلا أي اسم مرسل/مستلم (الحالة الأكثر شيوعاً مع الإيصالات العربية
-        // التي لا يقرأها ML Kit بشكل صحيح)
+        // نحتاج مساعدة LLM إذا لم نحصل على مبلغ، أو بلا أي اسم
         val needsLlmHelp = fields?.amount == null ||
             (fields.recipientName.isNullOrBlank() && fields.senderName.isNullOrBlank())
 
         var usedLlm = false
         var llmEngineUsed: String? = null
-        if (needsLlmHelp && ocrText.isNotBlank()) {
+        if (needsLlmHelp) {
             val llmFields = tryLlmExtraction(context, ocrText)
             if (llmFields != null) {
                 fields = mergeFields(fields, llmFields)
@@ -71,6 +74,20 @@ object ReceiptProcessor {
             }
         }
 
+        // ===== عتبة الحفظ المشددة =====
+        // لا تحفظ سجلاً بلا مبلغ موثوق، إلا إن كان فيه اسم + تاريخ صالح
+        val hasValidAmount = fields?.amount != null && fields.amount >= 1.0
+        val hasValidDate = fields?.date != null
+        val hasName = !fields?.senderName.isNullOrBlank() || !fields?.recipientName.isNullOrBlank()
+
+        val shouldSave = when {
+            hasValidAmount -> true // مبلغ موثوق = يكفي للحفظ
+            hasValidDate && hasName -> true // تاريخ + اسم = قد يكون حوالة فعلية
+            else -> false // بدون أي معيار موثوق = تجاهل (منع false positive)
+        }
+
+        if (!shouldSave) return
+
         val transfer = Transfer(
             id = UUID.randomUUID().toString(),
             senderName = fields?.senderName,
@@ -79,8 +96,10 @@ object ReceiptProcessor {
             date = fields?.date,
             bankId = bankId,
             confidence = when {
-                fields?.amount != null && usedLlm -> 0.9f
-                fields?.amount != null -> 0.7f
+                hasValidAmount && usedLlm && hasName -> 0.9f
+                hasValidAmount && hasName -> 0.75f
+                hasValidAmount -> 0.5f
+                hasValidDate && hasName -> 0.4f
                 else -> 0.2f
             },
             sourceFileName = file.name,
@@ -89,16 +108,9 @@ object ReceiptProcessor {
             llmEngineUsed = llmEngineUsed
         )
 
-        // احفظ فقط إذا استخرجنا شيئاً مفيداً على الأقل (مبلغ أو تاريخ)
-        if (transfer.amount != null || transfer.date != null) {
-            TransferRepository.addTransfer(context, transfer)
-        }
+        TransferRepository.addTransfer(context, transfer)
     }
 
-    /**
-     * يستدعي المحرك النشط لاستخراج البيانات من نص OCR الخام.
-     * يعيد null إذا لم يُضبط مفتاح للمحرك النشط أو فشل الاستدعاء.
-     */
     private suspend fun tryLlmExtraction(context: Context, ocrText: String):
         com.azzam.receiptscanner.llm.LlmExtractionResult? {
         val activeEngineId = ApiKeyStore.getActiveEngine(context)
@@ -107,10 +119,6 @@ object ReceiptProcessor {
         return engine.extract(ocrText, apiKey)
     }
 
-    /**
-     * يفضّل قيم Regex المحلية عند توفرها (أسرع/بلا تكلفة)، ويملأ الفراغات
-     * من نتيجة LLM. يحوّل تسمية receiver_name إلى recipientName المتّبعة محلياً.
-     */
     private fun mergeFields(
         original: ParsedFields?,
         llm: com.azzam.receiptscanner.llm.LlmExtractionResult

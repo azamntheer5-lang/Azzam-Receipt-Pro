@@ -1,11 +1,10 @@
-package com.azzam.receiptscanner.parser
+package com.example.receiptscanner.parser
 
 /**
  * محلّل إيصالات STC Pay.
  *
- * التطوير (المرحلة 1): استخدام FieldExtractors المشترك، وإضافة استخراج
- * المرسل والمستلم (كانا يُرجعان null دائماً سابقاً). STC Pay يستخدم
- * تسميات إنجليزية بشكل أساسي مع بعض العربية أحياناً.
+ * إصلاح: تشديد عبر FieldExtractors المشترك. STC Pay يستخدم تسميات
+ * إنجليزية بشكل أساسي مع بعض العربية أحياناً.
  */
 class StcPayParser : BankReceiptParser {
     override val bankId = "stc_pay"
