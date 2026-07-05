@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- عنصر قائمة أكثر الجهات: ترتيب + اسم + مبلغ -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@color/card_background"
+    android:padding="14dp"
+    android:layout_marginTop="6dp">
+
+    <TextView
+        android:id="@+id/textRank"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:background="@color/background_dark"
+        android:gravity="center"
+        android:textColor="@color/accent_dark"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:textSize="13sp"
+        android:textColor="@color/text_primary"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/textAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="13sp"
+        android:textColor="@color/text_primary"
+        android:textStyle="bold" />
+</LinearLayout>

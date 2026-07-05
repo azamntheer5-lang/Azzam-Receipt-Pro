@@ -1,58 +1,58 @@
 <resources>
     <!-- ============================================================
-         نظام ألوان "Financial Elegance" (إعادة تصميم جذري)
-         فلسفة: أخضر زمردي عميق + ذهبي للمبالغ (إحساس بنكي فاخر)
+         نظام ألوان "Modern Minimalist" — هادئ، نظيف، احترافي
+         فلسفة: تقليل التشبع، مساحات بيضاء، تباين ناعم
          ============================================================ -->
 
-    <!-- اللون الأساسي: زمردي عميق -->
-    <color name="primary">#0F5132</color>
-    <color name="primary_dark">#063D26</color>
-    <color name="primary_light">#2E7D52</color>
+    <!-- أساسي: أزرق رمادي هادئ (وليس أخضر زمردي صارخ) -->
+    <color name="primary">#2C3E50</color>
+    <color name="primary_dark">#1A2530</color>
+    <color name="primary_light">#5A6C7D</color>
 
-    <!-- اللون الثانوي: ذهبي للمبالغ (إحساس فاخر) -->
-    <color name="accent">#C9A227</color>
-    <color name="accent_light">#E6C547</color>
-    <color name="accent_dark">#8B6F1A</color>
+    <!-- ثانوي: تركواز ناعم للتمييز -->
+    <color name="accent">#0EA5A5</color>
+    <color name="accent_light">#5EEAD4</color>
+    <color name="accent_dark">#0F766E</color>
 
-    <!-- الخلفيات: طبقات رمادية ناعمة -->
-    <color name="background">#F7F9FA</color>
-    <color name="background_dark">#EEF2F4</color>
+    <!-- خلفيات: طبقات رمادية فاتحة جداً -->
+    <color name="background">#FAFBFC</color>
+    <color name="background_dark">#F1F4F7</color>
     <color name="card_background">#FFFFFF</color>
     <color name="surface_elevated">#FFFFFF</color>
 
     <!-- النصوص -->
-    <color name="text_primary">#0A1929</color>
-    <color name="text_secondary">#5A6B7B</color>
-    <color name="text_hint">#9AAAB9</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_hint">#94A3B8</color>
     <color name="text_on_primary">#FFFFFF</color>
-    <color name="text_on_accent">#1A1300</color>
+    <color name="text_on_accent">#FFFFFF</color>
 
     <!-- الحدود والفواصل -->
-    <color name="divider">#E3E8EC</color>
-    <color name="border_subtle">#EFF3F5</color>
+    <color name="divider">#E2E8F0</color>
+    <color name="border_subtle">#F1F5F9</color>
 
-    <!-- ألوان شارات الثقة (مكرّرة) -->
-    <color name="confidence_high">#0F7B4F</color>
-    <color name="confidence_medium">#D97706</color>
-    <color name="confidence_low">#DC2626</color>
+    <!-- ألوان شارات الثقة -->
+    <color name="confidence_high">#10B981</color>
+    <color name="confidence_medium">#F59E0B</color>
+    <color name="confidence_low">#EF4444</color>
 
     <!-- ألوان شارة الدور -->
-    <color name="role_sender_bg">#E0EAF3</color>
-    <color name="role_sender_text">#1565C0</color>
-    <color name="role_recipient_bg">#E0F2E9</color>
-    <color name="role_recipient_text">#0F5132</color>
-    <color name="role_both_bg">#FFF4E0</color>
-    <color name="role_both_text">#8B6F1A</color>
+    <color name="role_sender_bg">#DBEAFE</color>
+    <color name="role_sender_text">#1E40AF</color>
+    <color name="role_recipient_bg">#D1FAE5</color>
+    <color name="role_recipient_text">#065F46</color>
+    <color name="role_both_bg">#FEF3C7</color>
+    <color name="role_both_text">#92400E</color>
 
-    <!-- تدرّج الهيرو (بطاقة الإحصائيات الرئيسية) -->
-    <color name="hero_gradient_start">#0F5132</color>
-    <color name="hero_gradient_end">#063D26</color>
+    <!-- ألوان الرسوم البيانية (Palette متناسق) -->
+    <color name="chart_1">#0EA5A5</color>
+    <color name="chart_2">#3B82F6</color>
+    <color name="chart_3">#F59E0B</color>
+    <color name="chart_4">#EC4899</color>
+    <color name="chart_5">#8B5CF6</color>
+    <color name="chart_6">#10B981</color>
+    <color name="chart_7">#F97316</color>
 
-    <!-- تدرّج الذهب للمبالغ المميزة -->
-    <color name="gold_gradient_start">#E6C547</color>
-    <color name="gold_gradient_end">#C9A227</color>
-
-    <!-- خلفية شفافة للطبقات الزجاجية -->
-    <color name="glass_overlay">#33FFFFFF</color>
-    <color name="shadow_soft">#14000000</color>
+    <!-- ظلال ناعمة -->
+    <color name="shadow_soft">#0A000000</color>
 </resources>

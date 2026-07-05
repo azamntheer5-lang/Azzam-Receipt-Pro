@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- الثيم الأساسي: Material 3 حديث مع شريط حالة شفاف -->
+    <!-- الثيم الأساسي: Modern Minimalist — هادئ، نظيف -->
     <style name="Theme.ReceiptScanner" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary_dark</item>
@@ -11,8 +11,9 @@
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="android:colorBackground">@color/background</item>
         <item name="android:windowBackground">@color/background</item>
-        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:statusBarColor">@color/background</item>
         <item name="android:navigationBarColor">@color/card_background</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="ShapeAppearance.Small" parent="">

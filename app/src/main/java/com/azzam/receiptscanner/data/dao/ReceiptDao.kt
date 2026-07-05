@@ -88,4 +88,27 @@ interface ReceiptDao {
     /** عدد حوالات شخص كمستلِم. */
     @Query("SELECT COUNT(*) FROM receipts WHERE recipientName = :name")
     suspend fun countReceivedBy(name: String): Int
+
+    // ---------- استعلامات Dashboard ----------
+
+    /** إجمالي المبالغ لكل بنك (لتوزيع النسب المئوية). */
+    @Query("SELECT bankId AS bank, COALESCE(SUM(amount), 0) AS total, COUNT(*) AS count FROM receipts WHERE amount IS NOT NULL GROUP BY bankId ORDER BY total DESC")
+    suspend fun totalsByBank(): List<BankTotal>
+
+    /** عدد السجلات لكل مستوى ثقة. */
+    @Query("SELECT CASE WHEN confidence >= 0.85 THEN 'high' WHEN confidence >= 0.5 THEN 'medium' ELSE 'low' END AS level, COUNT(*) AS count FROM receipts GROUP BY level")
+    suspend fun countsByConfidence(): List<ConfidenceCount>
 }
+
+/** نتيجة استعلام إجمالي البنك. */
+data class BankTotal(
+    val bank: String,
+    val total: Double,
+    val count: Int
+)
+
+/** نتيجة استعلام عدّ الثقة. */
+data class ConfidenceCount(
+    val level: String,
+    val count: Int
+)

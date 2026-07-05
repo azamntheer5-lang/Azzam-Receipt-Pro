@@ -26,6 +26,16 @@
     <string name="analytics_top_title">أكثر الجهات تكراراً</string>
     <string name="analytics_no_data">لا توجد بيانات كافية بعد لعرض تحليلات</string>
 
+    <!-- Dashboard (Ultra Premium) -->
+    <string name="dashboard_total_label">إجمالي المبالغ المستخرجة</string>
+    <string name="dashboard_bank_distribution">توزيع المبالغ حسب البنوك</string>
+    <string name="dashboard_bank_distribution_desc">النسب المئوية لإجمالي الحوالات لكل بنك</string>
+    <string name="dashboard_monthly_desc">تطوّر الإجمالي الشهري للحوالات</string>
+    <string name="stat_avg">متوسط الحوالة</string>
+    <string name="stat_max">أكبر حوالة</string>
+    <string name="stat_banks">عدد البنوك</string>
+    <string name="stat_review">يحتاج مراجعة</string>
+
     <string name="search_hint">ابحث بالاسم أو البنك…</string>
     <string name="count_format">%d إيصال</string>
     <string name="widget_subtitle_format">%d إيصال</string>

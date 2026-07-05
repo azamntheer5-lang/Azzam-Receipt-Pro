@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  بطاقة السجل (إعادة تصميم جذري - "Financial Elegance")
-  التصميم:
-   - شريط جانبي ملوّن حسب الثقة (أخضر/برتقالي/أحمر)
-   - تخطيط أفقي: المعلومات يميناً + المبلغ يساراً
-   - سهم اتجاه (من ← إلى) بدل تسميات نصية
-   - شارة المحرك + المصدر في الأسفل
-   - زوايا 20dp + ظل ناعم + حد رفيع
+  بطاقة السجل (Modern Minimalist) — نظيفة جداً، مساحات بيضاء واسعة
+  التصميم: خط جانبي رفيع للثقة + تخطيط أفقي مع تنفس بصري
 -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -17,11 +12,11 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginTop="6dp"
-    android:layout_marginBottom="6dp"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="2dp"
-    app:strokeColor="@color/border_subtle"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/divider"
     app:strokeWidth="1dp"
     app:cardBackgroundColor="@color/card_background">
 
@@ -30,72 +25,55 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <!-- ===== الشريط الجانبي للثقة (لون حسب المستوى) ===== -->
+        <!-- شريط جانبي رفيع جداً (4dp) للثقة -->
         <View
             android:id="@+id/confidenceStrip"
-            android:layout_width="6dp"
+            android:layout_width="4dp"
             android:layout_height="match_parent"
-            android:background="@drawable/confidence_strip" />
+            android:background="@color/confidence_high" />
 
-        <!-- ===== المحتوى ===== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <!-- العمود الأيمن: الأسماء + التاريخ -->
+            <!-- العمود الأيمن: الأسماء -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <!-- صف المرسل -->
+                <TextView
+                    android:id="@+id/textSender"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:maxWidth="140dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="JANA ADEL" />
+
+                <TextView
+                    android:id="@+id/textRecipient"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"
+                    android:textStyle="bold"
+                    android:maxWidth="140dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="Mariam Mohammed" />
+
+                <!-- سطر سفلي: تاريخ • بنك -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:id="@+id/textSender"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="15sp"
-                        android:textColor="@color/text_primary"
-                        android:textStyle="bold"
-                        android:maxWidth="120dp"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        tools:text="أحمد محمد" />
-
-                    <!-- سهم الاتجاه -->
-                    <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:layout_marginStart="6dp"
-                        android:layout_marginEnd="6dp"
-                        android:src="@drawable/ic_direction_arrow" />
-
-                    <TextView
-                        android:id="@+id/textRecipient"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="15sp"
-                        android:textColor="@color/primary"
-                        android:textStyle="bold"
-                        android:maxWidth="120dp"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        tools:text="شركة التقنية" />
-                </LinearLayout>
-
-                <!-- سطر التاريخ + البنك -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="10dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
@@ -103,29 +81,29 @@
                         android:id="@+id/textDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
-                        tools:text="2024-05-12" />
+                        android:textSize="11sp"
+                        android:textColor="@color/text_hint"
+                        tools:text="2026-07-05" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:text="•"
-                        android:textSize="14sp"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:text="·"
+                        android:textSize="11sp"
                         android:textColor="@color/text_hint" />
 
                     <TextView
                         android:id="@+id/textBank"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_hint"
                         tools:text="al_rajhi" />
                 </LinearLayout>
 
-                <!-- سطر المصدر + شارة المحرك -->
+                <!-- المصدر + شارة المحرك -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -149,21 +127,20 @@
                         android:id="@+id/textEngine"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="6dp"
                         android:textSize="9sp"
-                        android:background="@drawable/bg_search_rounded"
-                        android:textColor="@color/primary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
+                        android:background="@color/background_dark"
+                        android:textColor="@color/accent_dark"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
                         android:paddingTop="2dp"
                         android:paddingBottom="2dp"
-                        android:textStyle="bold"
                         android:visibility="gone"
                         tools:text="gemini" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- العمود الأيسر: المبلغ + شارة الثقة -->
+            <!-- العمود الأيسر: المبلغ -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -174,9 +151,10 @@
                     android:id="@+id/textAmount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="18sp"
+                    android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="@color/accent_dark"
+                    android:textColor="@color/text_primary"
+                    android:letterSpacing="-0.02"
                     tools:text="1,234.56" />
 
                 <TextView
@@ -192,7 +170,7 @@
                     android:id="@+id/textConfidence"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="8dp"
                     android:textSize="9sp"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"

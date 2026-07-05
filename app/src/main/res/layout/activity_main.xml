@@ -1,23 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  الشاشة الرئيسية (إعادة تصميم جذري - فلسفة "Financial Elegance")
-  المكونات:
-   1. شريط أدوات شفاف بدون خلفية ملونة (يندمج مع الهيرو)
-   2. بطاقة هيرو (Hero) بتدرّج زمردي: الإجمالي بحجم ضخم + ذهبي للتنبيه
-   3. شريط بحث حديث بزاوية 28dp
-   4. قائمة RecyclerView
-   5. Bottom Navigation (رئيسية/كشف/تحليلات/إعدادات)
-   6. FAB دائري مميز
+  الشاشة الرئيسية (Modern Minimalist) — نظيفة، هادئة، مساحات بيضاء واسعة
 -->
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- ===== حاوية الإذن (تظهر قبل منح صلاحية الملفات) ===== -->
+    <!-- ===== حاوية الإذن ===== -->
     <LinearLayout
         android:id="@+id/permissionContainer"
         android:layout_width="match_parent"
@@ -28,16 +20,16 @@
         android:visibility="gone">
 
         <ImageView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:src="@drawable/ic_receipt_modern"
-            android:background="@drawable/bg_icon_circle"
-            android:padding="20dp"
-            android:layout_marginBottom="24dp" />
+            app:tint="@color/accent"
+            android:alpha="0.6" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:text="@string/permission_required_title"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -56,7 +48,6 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonGrantPermission"
-            style="@style/Widget.GoldButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
@@ -64,7 +55,10 @@
             android:paddingEnd="32dp"
             android:paddingTop="14dp"
             android:paddingBottom="14dp"
-            android:text="@string/grant_permission" />
+            android:text="@string/grant_permission"
+            android:backgroundTint="@color/accent"
+            android:textColor="@color/text_on_accent"
+            app:cornerRadius="12dp" />
     </LinearLayout>
 
     <!-- ===== الحاوية الرئيسية ===== -->
@@ -75,7 +69,6 @@
         android:orientation="vertical"
         android:visibility="gone">
 
-        <!-- شريط الأدوات: شفاف ليتمازج مع الهيرو -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
@@ -96,76 +89,40 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- ===== بطاقة الهيرو: الإجمالي بتدرّج زمردي ===== -->
+                <!-- ===== بطاقة الإجمالي (Minimalist) ===== -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
                     android:orientation="vertical"
-                    android:background="@drawable/gradient_hero"
+                    android:background="@color/card_background"
                     android:padding="28dp"
-                    android:elevation="8dp">
+                    android:elevation="0dp">
 
-                    <!-- صف علوي: عنوان + أيقونة -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/hero_total_label"
+                        android:textColor="@color/text_hint"
+                        android:textSize="12sp"
+                        android:letterSpacing="0.08" />
+
+                    <TextView
+                        android:id="@+id/textTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/text_primary"
+                        android:textSize="40sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="-0.03"
+                        tools:text="12,345.67" />
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/hero_total_label"
-                                android:textColor="#B0FFFFFF"
-                                android:textSize="13sp"
-                                android:letterSpacing="0.05" />
-
-                            <TextView
-                                android:id="@+id/textTotal"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:textColor="#FFFFFF"
-                                android:textSize="36sp"
-                                android:textStyle="bold"
-                                android:letterSpacing="-0.02"
-                                tools:text="١٬٢٣٤٫٥٦ ر.س" />
-                        </LinearLayout>
-
-                        <FrameLayout
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
-                            android:background="@drawable/bg_icon_circle">
-
-                            <ImageView
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_receipt_modern" />
-                        </FrameLayout>
-                    </LinearLayout>
-
-                    <!-- فاصل ناعم -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
                         android:layout_marginTop="20dp"
-                        android:layout_marginBottom="16dp"
-                        android:background="#33FFFFFF" />
-
-                    <!-- صف سفلي: العدد + تنبيه المراجعة -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
 
@@ -174,86 +131,70 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:textColor="#E0FFFFFF"
+                            android:textColor="@color/text_secondary"
                             android:textSize="13sp"
-                            tools:text="٤٢ إيصال" />
+                            tools:text="42 إيصال" />
 
                         <TextView
                             android:id="@+id/textNeedsReview"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#FFCDD2"
+                            android:textColor="@color/confidence_low"
                             android:textSize="12sp"
-                            android:drawableStart="@drawable/ic_review_warning"
-                            android:drawablePadding="6dp"
-                            android:gravity="center_vertical"
                             android:visibility="gone"
-                            tools:text="٣ يحتاج مراجعة" />
+                            tools:text="3 يحتاج مراجعة" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- ===== شريط البحث الحديث ===== -->
-                <FrameLayout
+                <!-- ===== شريط البحث (Minimalist) ===== -->
+                <EditText
+                    android:id="@+id/editSearch"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginTop="16dp">
-
-                    <EditText
-                        android:id="@+id/editSearch"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:paddingStart="52dp"
-                        android:paddingEnd="20dp"
-                        android:background="@drawable/bg_search_rounded"
-                        android:hint="@string/search_hint"
-                        android:inputType="text"
-                        android:imeOptions="actionSearch"
-                        android:maxLines="1"
-                        android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_hint"
-                        android:textSize="14sp"
-                        android:elevation="2dp" />
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_gravity="start|center_vertical"
-                        android:layout_marginStart="16dp"
-                        android:src="@drawable/ic_search_modern"
-                        app:tint="@color/text_hint" />
-                </FrameLayout>
+                    android:layout_height="48dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginTop="20dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@color/card_background"
+                    android:hint="@string/search_hint"
+                    android:inputType="text"
+                    android:imeOptions="actionSearch"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="14sp" />
 
                 <!-- ===== عنوان القائمة ===== -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="28dp"
                     android:layout_marginBottom="4dp"
                     android:text="@string/recent_transfers_title"
                     android:textStyle="bold"
-                    android:textSize="15sp"
-                    android:textColor="@color/text_primary" />
+                    android:textSize="13sp"
+                    android:textColor="@color/text_secondary"
+                    android:letterSpacing="0.05" />
 
                 <!-- ===== حالة فارغة ===== -->
                 <LinearLayout
                     android:id="@+id/textEmpty"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="60dp"
+                    android:layout_marginTop="80dp"
                     android:orientation="vertical"
                     android:gravity="center"
                     android:padding="24dp"
                     android:visibility="gone">
 
                     <ImageView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
                         android:src="@drawable/ic_receipt_modern"
                         app:tint="@color/text_hint"
-                        android:alpha="0.4" />
+                        android:alpha="0.3" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -261,7 +202,7 @@
                         android:layout_marginTop="16dp"
                         android:text="@string/empty_list"
                         android:textColor="@color/text_hint"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:gravity="center" />
                 </LinearLayout>
 
@@ -272,13 +213,14 @@
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false"
                     android:clipToPadding="false"
+                    android:paddingTop="8dp"
                     android:paddingBottom="100dp"
                     tools:listitem="@layout/item_transfer" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </LinearLayout>
 
-    <!-- ===== زر المسح العائم ===== -->
+    <!-- ===== FAB ===== -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabScanNow"
         android:layout_width="wrap_content"
@@ -288,12 +230,12 @@
         android:layout_marginBottom="80dp"
         android:contentDescription="@string/scan_now"
         android:src="@drawable/ic_receipt_modern"
-        app:backgroundTint="@color/primary"
-        app:tint="@color/text_on_primary"
-        app:elevation="6dp"
+        app:backgroundTint="@color/accent"
+        app:tint="@color/text_on_accent"
+        app:elevation="4dp"
         app:fabSize="normal" />
 
-    <!-- ===== شريط التنقل السفلي ===== -->
+    <!-- ===== شريط التنقل ===== -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
