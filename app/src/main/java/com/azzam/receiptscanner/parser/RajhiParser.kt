@@ -1,4 +1,4 @@
-package com.example.receiptscanner.parser
+package com.azzam.receiptscanner.parser
 
 /**
  * محلّل إيصالات مصرف الراجحي.

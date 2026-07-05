@@ -1,4 +1,4 @@
-package com.example.receiptscanner.processing
+package com.azzam.receiptscanner.processing
 
 import android.content.Context
 import android.graphics.BitmapFactory
