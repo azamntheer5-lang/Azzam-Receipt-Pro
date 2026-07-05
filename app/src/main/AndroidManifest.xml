@@ -23,7 +23,7 @@
 
         <activity
             android:name=".MainActivity"
-            android:theme="@style/Theme.ReceiptScanner.Splash"
+            android:theme="@style/Theme.ReceiptScanner"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

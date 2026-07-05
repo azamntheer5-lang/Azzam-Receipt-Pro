@@ -9,7 +9,7 @@
    5. Bottom Navigation (رئيسية/كشف/تحليلات/إعدادات)
    6. FAB دائري مميز
 -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -81,8 +81,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@android:color/transparent"
-            app:titleTextColor="@color/text_primary"
-            app:menu="@menu/main_menu" />
+            app:titleTextColor="@color/text_primary" />
 
         <androidx.core.widget.NestedScrollView
             android:id="@+id/scrollContent"
@@ -307,4 +306,4 @@
         app:itemTextColor="@color/primary"
         app:elevation="8dp" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</FrameLayout>
