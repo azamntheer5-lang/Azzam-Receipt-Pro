@@ -103,6 +103,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** مُطلق اختيار مجلد كامل للمعالجة بالجملة (Batch Processing). */
+    private val openFolderLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            // احتفظ بصلاحية الوصول الدائم
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            contentResolver.takePersistableUriPermission(uri, flags)
+            startBatchScan(uri)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // شاشة البداية تُعرض تلقائياً عبر ثيم Theme.ReceiptScanner.Splash
         // (لا حاجة لاستدعاء installSplashScreen برمجياً)
@@ -176,6 +188,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_statements -> startActivity(Intent(this, AccountStatementsActivity::class.java))
+            R.id.action_batch_scan -> openFolderLauncher.launch(null)
             R.id.action_analytics -> startActivity(Intent(this, AnalyticsActivity::class.java))
             R.id.action_export_csv -> exportCsv()
             R.id.action_export_pdf -> exportPdf()
@@ -226,6 +239,20 @@ class MainActivity : AppCompatActivity() {
         val request = OneTimeWorkRequestBuilder<PeriodicScanWorker>().build()
         WorkManager.getInstance(this).enqueue(request)
         toast(R.string.scan_started)
+    }
+
+    /** يبدأ المعالجة بالجملة لمجلد كامل عبر BatchScanWorker. */
+    private fun startBatchScan(folderUri: Uri) {
+        val request = androidx.work.OneTimeWorkRequestBuilder<com.azzam.receiptscanner.processing.BatchScanWorker>()
+            .setInputData(
+                androidx.work.workDataOf(
+                    com.azzam.receiptscanner.processing.BatchScanWorker.KEY_TREE_URI,
+                    folderUri.toString()
+                )
+            )
+            .build()
+        WorkManager.getInstance(this).enqueue(request)
+        toast(R.string.batch_scan_started)
     }
 
     // ---------- القائمة + البحث ----------

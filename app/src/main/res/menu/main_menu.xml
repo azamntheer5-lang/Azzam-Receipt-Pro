@@ -7,6 +7,10 @@
         android:title="@string/menu_statements"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_batch_scan"
+        android:title="@string/menu_batch_scan"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_analytics"
         android:title="@string/menu_analytics"
         app:showAsAction="never" />

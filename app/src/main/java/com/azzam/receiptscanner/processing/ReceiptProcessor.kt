@@ -15,28 +15,33 @@ import java.io.File
 import java.util.UUID
 
 /**
- * خط المعالجة الكامل لملف واحد:
- * فلترة النوع/الحجم → OCR → فلتر المحتوى → Regex → (عند الحاجة) LLM → حفظ.
+ * خط المعالجة الكامل لملف واحد.
  *
- * إصلاح جوهري: أضفنا فلتر المحتوى [FileFilter.looksLikeReceipt] بعد OCR
- * لمنع معالجة الملفات غير الإيصالية (ميمز/صور شخصية/مستندات عادية).
- * كما رفعنا عتبة الحفظ: لا يُحفظ سجل إلا بـ:
- *  - مبلغ موثوق (مرتبط بعملة) > 1.0، OR
- *  - تاريخ صالح غير مستقبلي + على الأقل اسم واحد
+ * تحسين (بناءً على عينة 452 ملف):
+ *  - فلتر اسم الملف قبل OCR (تجاهل فوري للـ CVs/الواجبات/التقارير المعملية)
+ *  - تجاوز فلتر المحتوى لأسماء الملفات الإيجابية (receipt/transfer/alinma)
+ *  - عتبة حفظ مشددة لمنع false positives
  */
 object ReceiptProcessor {
 
     private val registry = ParserRegistry()
 
-    suspend fun processFile(context: Context, file: File) {
-        if (!file.exists()) return
+    /**
+     * يعالج ملفاً واحداً. آمن للاستدعاء المتزامن (idempotent).
+     * يعيد true إن تم حفظ سجل، false إن تُجُوهِل.
+     */
+    suspend fun processFile(context: Context, file: File): Boolean {
+        if (!file.exists()) return false
 
         val key = "${file.absolutePath}_${file.lastModified()}_${file.length()}"
-        if (ProcessedFilesTracker.isProcessed(context, key)) return
-        if (!FileFilter.isCandidateReceipt(file)) return
+        if (ProcessedFilesTracker.isProcessed(context, key)) return false
+        if (!FileFilter.isCandidateReceipt(file)) return false
 
-        // علّم كمعالَج فوراً لمنع سباق
         ProcessedFilesTracker.markProcessed(context, key)
+
+        // ===== فلتر اسم الملف (قبل OCR — يوفر وقتاً كبيراً) =====
+        val filenameHint = FileFilter.filenameHint(file)
+        if (filenameHint == false) return false // اسم واضح لغير إيصال
 
         val ocrText = try {
             extractText(file)
@@ -44,10 +49,10 @@ object ReceiptProcessor {
             ""
         }
 
-        // ===== فلتر المحتوى الجوهري =====
-        // لا تعالج الملف إن لم يبدُ كإيصال حوالة (كلمات مفتاحية/مبلغ/IBAN)
-        if (ocrText.isBlank() || !FileFilter.looksLikeReceipt(ocrText)) {
-            return // تجاهل بهدوء: ميمز/صورة شخصية/مستند عادي
+        // ===== فلتر المحتوى =====
+        // إن كان اسم الملف إيجابياً (receipt/transfer)، تجاوز فلتر المحتوى
+        if (filenameHint != true) {
+            if (ocrText.isBlank() || !FileFilter.looksLikeReceipt(ocrText)) return false
         }
 
         var bankId = "unknown"
@@ -58,13 +63,13 @@ object ReceiptProcessor {
             fields = extraction?.second
         }
 
-        // نحتاج مساعدة LLM إذا لم نحصل على مبلغ، أو بلا أي اسم
+        // LLM عند الحاجة
         val needsLlmHelp = fields?.amount == null ||
             (fields.recipientName.isNullOrBlank() && fields.senderName.isNullOrBlank())
 
         var usedLlm = false
         var llmEngineUsed: String? = null
-        if (needsLlmHelp) {
+        if (needsLlmHelp && ocrText.isNotBlank()) {
             val llmFields = tryLlmExtraction(context, ocrText)
             if (llmFields != null) {
                 fields = mergeFields(fields, llmFields)
@@ -74,20 +79,18 @@ object ReceiptProcessor {
             }
         }
 
-        // ===== عتبة الحفظ المشددة =====
-        // لا تحفظ سجلاً بلا مبلغ موثوق، إلا إن كان فيه اسم + تاريخ صالح
+        // ===== عتبة الحفظ =====
         val amountValue = fields?.amount
         val hasValidAmount = amountValue != null && amountValue >= 1.0
         val hasValidDate = fields?.date != null
         val hasName = !fields?.senderName.isNullOrBlank() || !fields?.recipientName.isNullOrBlank()
 
         val shouldSave = when {
-            hasValidAmount -> true // مبلغ موثوق = يكفي للحفظ
-            hasValidDate && hasName -> true // تاريخ + اسم = قد يكون حوالة فعلية
-            else -> false // بدون أي معيار موثوق = تجاهل (منع false positive)
+            hasValidAmount -> true
+            hasValidDate && hasName -> true
+            else -> false
         }
-
-        if (!shouldSave) return
+        if (!shouldSave) return false
 
         val transfer = Transfer(
             id = UUID.randomUUID().toString(),
@@ -110,6 +113,7 @@ object ReceiptProcessor {
         )
 
         TransferRepository.addTransfer(context, transfer)
+        return true
     }
 
     private suspend fun tryLlmExtraction(context: Context, ocrText: String):

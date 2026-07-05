@@ -12,6 +12,8 @@
     <string name="cancel">إلغاء</string>
 
     <string name="menu_statements">🧾 كشف الحسابات</string>
+    <string name="menu_batch_scan">📁 فحص مجلد كامل</string>
+    <string name="batch_scan_started">جارٍ فحص المجلد في الخلفية… قد يستغرق عدة دقائق</string>
     <string name="menu_analytics">📊 تحليلات ورسوم بيانية</string>
     <string name="menu_export_csv">📄 تصدير Excel (CSV)</string>
     <string name="menu_export_pdf">📑 تصدير تقرير PDF</string>
