@@ -40,12 +40,20 @@ object ImagePreprocessor {
     /**
      * يعالج Bitmap مباشرة.
      * يُرجع Bitmap جديد معالَجاً ويدمّر الأصلية.
+     *
+     * الترتيب (مهم): Deskew → Grayscale+Contrast → Binarization
+     *  - Deskew أولاً لأن حساب الميل يحتاج صورة أصلية (ليست binarized)
+     *  - Grayscale+Contrast لتوضيح النص
+     *  - Binarization أخيراً للفصل النهائي
      */
     fun preprocessBitmap(original: Bitmap): Bitmap {
-        // المرحلة 1: تدرج رمادي + زيادة تباين (مدمجة في ColorMatrix واحدة)
-        val enhanced = applyGrayscaleAndContrast(original, contrast = 1.4f, brightness = 10f)
-        if (enhanced !== original) {
-            original.recycle()
+        // ★ المرحلة 0: تصحيح ميل النص (Deskew)
+        val deskewed = DeskewDetector.deskew(original)
+
+        // المرحلة 1: تدرج رمادي + زيادة تباين
+        val enhanced = applyGrayscaleAndContrast(deskewed, contrast = 1.4f, brightness = 10f)
+        if (enhanced !== deskewed) {
+            deskewed.recycle()
         }
 
         // المرحلة 2: Binarization بطريقة Otsu

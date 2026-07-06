@@ -2,6 +2,7 @@ package com.azzam.receiptscanner.processing
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.azzam.receiptscanner.llm.ExtractionHints
 import com.azzam.receiptscanner.llm.LlmManager
 import com.azzam.receiptscanner.model.Transfer
 import com.azzam.receiptscanner.ocr.ImageCompressor
@@ -10,6 +11,7 @@ import com.azzam.receiptscanner.ocr.MlKitOcrHelper
 import com.azzam.receiptscanner.ocr.PdfHelper
 import com.azzam.receiptscanner.parser.BankMatcher
 import com.azzam.receiptscanner.parser.DataSanitizer
+import com.azzam.receiptscanner.parser.FieldExtractors
 import com.azzam.receiptscanner.parser.ParsedFields
 import com.azzam.receiptscanner.parser.ParserRegistry
 import com.azzam.receiptscanner.storage.ApiKeyStore
@@ -57,6 +59,7 @@ object ReceiptProcessor {
             if (ocrText.isBlank() || !FileFilter.looksLikeReceipt(ocrText)) return false
         }
 
+        // ===== المرحلة الأولى: Regex محلي صارم (سريع + مؤكّد) =====
         var bankId = "unknown"
         var fields: ParsedFields? = null
         if (ocrText.isNotBlank()) {
@@ -65,13 +68,21 @@ object ReceiptProcessor {
             fields = extraction?.second
         }
 
+        // ===== بناء Hints من المستخرَجات المؤكّدة =====
+        val hints = ExtractionHints(
+            amount = fields?.amount,
+            date = fields?.date,
+            iban = extractIban(ocrText)
+        )
+
+        // ===== المرحلة الثانية: LLM مع hints (تركيز على الأسماء + البنك) =====
         val needsLlmHelp = fields?.amount == null ||
             (fields.recipientName.isNullOrBlank() && fields.senderName.isNullOrBlank())
 
         var usedLlm = false
         var llmEngineUsed: String? = null
         if (needsLlmHelp && ocrText.isNotBlank()) {
-            val llmFields = tryLlmExtraction(context, ocrText)
+            val llmFields = tryLlmExtractionWithHints(context, ocrText, hints)
             if (llmFields != null) {
                 fields = mergeFields(fields, llmFields)
                 if (bankId == "unknown") bankId = "llm_${llmFields.engineId}"
@@ -125,6 +136,28 @@ object ReceiptProcessor {
         val engine = LlmManager.getEngine(activeEngineId) ?: return null
         val apiKey = ApiKeyStore.getApiKey(context, activeEngineId) ?: return null
         return engine.extract(ocrText, apiKey)
+    }
+
+    /** ★ يستدعي المحرك النشط مع تمرير hints (المرحلة الثانية الهجينة). */
+    private suspend fun tryLlmExtractionWithHints(
+        context: Context,
+        ocrText: String,
+        hints: ExtractionHints
+    ): com.azzam.receiptscanner.llm.LlmExtractionResult? {
+        val activeEngineId = ApiKeyStore.getActiveEngine(context)
+        val engine = LlmManager.getEngine(activeEngineId) ?: return null
+        val apiKey = ApiKeyStore.getApiKey(context, activeEngineId) ?: return null
+        // استخدم extractWithHints إذا وفّرها المحرك، وإلا fallback للعادية
+        return engine.extractWithHints(ocrText, apiKey, hints)
+    }
+
+    /** يستخرج IBAN سعودي من النص (للـ hints). */
+    private fun extractIban(text: String): String? {
+        // IBAN كامل: SA + 22 رقم
+        Regex("""SA\d{2}\s?\d{2}\s?\d{18}""").find(text)?.let { return it.value.replace(" ", "") }
+        // IBAN مقنّع: SA** **** **** **** **** 7862
+        Regex("""SA\*+\s*\*+\s*\*+\s*\*+\s*\*+\s*\d+""").find(text)?.let { return it.value }
+        return null
     }
 
     private fun mergeFields(

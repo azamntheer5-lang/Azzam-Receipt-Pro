@@ -3,23 +3,29 @@ package com.azzam.receiptscanner.llm
 /**
  * واجهة موحّدة لجميع محركات الذكاء الاصطناعي.
  *
- * تطبيق نمط Strategy: كل محرك يطبّق هذه الواجهة، والمستهلك (ReceiptProcessor)
- * لا يعرف أي محرك نشط — فقط يستدعي [extract]. هذا يفصل منطق الاستخراج عن
- * تفاصيل كل API، ويسهّل إضافة محركات مستقبلاً دون تعديل المستهلك (OCP).
+ * تطبيق نمط Strategy مع دعم Hints (المرحلة الثانية الهجينة).
  */
 interface LlmEngine {
-    /** معرّف فريد للمحرك (يُستخدم في الإعدادات والتخزين). */
     val engineId: String
-
-    /** الاسم المعروض للمستخدم. */
     val displayName: String
 
     /**
-     * يستخرج بيانات الحوالة من نص OCR الخام.
+     * يستخرج بيانات الحوالة من نص OCR (مع retry تلقائي داخلي).
      *
-     * @param ocrText نص الـ OCR الخام (قد يكون فوضوياً/مشوّهاً).
-     * @param apiKey مفتاح الـ API الخاص بالمحرك (يجب ألا يكون فارغاً).
-     * @return [LlmExtractionResult] يحوي JSON المُفسَّر، أو null عند الفشل.
+     * @param ocrText نص الـ OCR الخام
+     * @param apiKey مفتاح الـ API
+     * @return [LlmExtractionResult] أو null عند الفشل التام
      */
     suspend fun extract(ocrText: String, apiKey: String): LlmExtractionResult?
+
+    /**
+     * يستخرج بيانات الحوالة مع تضمين hints من Regex.
+     * التنفيذ الافتراضي: يتجاهل hints ويستدعي extract العادية.
+     * المحركات يمكنها override لتستفيد من hints.
+     */
+    suspend fun extractWithHints(
+        ocrText: String,
+        apiKey: String,
+        hints: ExtractionHints?
+    ): LlmExtractionResult? = extract(ocrText, apiKey)
 }

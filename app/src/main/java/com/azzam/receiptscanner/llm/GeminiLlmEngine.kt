@@ -15,10 +15,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
 /**
- * محرك Google Gemini لاستخراج بيانات الحوالة من نص OCR.
- *
- * يستخدم Gemini 1.5 Flash (متوازن السرعة/التكلفة/الجودة للعربية).
- * النموذج يدعم العربية بقوة، وهذا يكمّل قصور ML Kit المحلي.
+ * محرك Google Gemini — مع آلية إعادة محاولة ذكية (Smart Retry).
+ * temperature=0.0 + fallback prompt عند فشل الاستخراج الأول.
  */
 class GeminiLlmEngine : LlmEngine {
 
@@ -34,55 +32,49 @@ class GeminiLlmEngine : LlmEngine {
         withContext(Dispatchers.IO) {
             if (apiKey.isBlank() || ocrText.isBlank()) return@withContext null
             try {
-                val requestJson = """
-                    {
-                      "system_instruction": {
-                        "parts": [{ "text": ${escapeJson(LlmPrompt.SYSTEM_PROMPT)} }]
-                      },
-                      "contents": [{
-                        "role": "user",
-                        "parts": [{ "text": ${escapeJson(LlmPrompt.userPrompt(ocrText))} }]
-                      }],
-                      "generationConfig": {
-                        "temperature": 0.0,
-                        "maxOutputTokens": 512
-                      }
-                    }
-                """.trimIndent()
-
-                val body = requestJson.toRequestBody("application/json".toMediaType())
-                val request = Request.Builder()
-                    .url("$API_URL$apiKey")
-                    .addHeader("content-type", "application/json")
-                    .post(body)
-                    .build()
-
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) return@withContext null
-                    val responseText = response.body?.string() ?: return@withContext null
-                    val root = Json.parseToJsonElement(responseText) as? JsonObject
-                        ?: return@withContext null
-                    val candidates = root["candidates"]?.jsonArray ?: return@withContext null
-                    val text = candidates.firstOrNull()?.jsonObject
-                        ?.get("content")?.jsonObject
-                        ?.get("parts")?.jsonArray
-                        ?.firstOrNull()?.jsonObject
-                        ?.get("text")?.jsonPrimitive?.contentOrNull
-                        ?: return@withContext null
-                    LlmResponseParser.parse(text, engineId)
-                }
-            } catch (e: Exception) {
-                null
-            }
+                val r1 = callApi(ocrText, apiKey, LlmPrompt.SYSTEM_PROMPT)
+                if (r1 != null && hasUsefulData(r1)) return@withContext r1
+                val r2 = callApi(ocrText, apiKey, LlmPrompt.FALLBACK_PROMPT)
+                r2 ?: r1
+            } catch (e: Exception) { null }
         }
 
-    /** يُرجع تمثيل JSON صالح للسلسلة (مع علامات اقتباس وتهريب). */
+    private fun callApi(ocrText: String, apiKey: String, systemPrompt: String): LlmExtractionResult? {
+        val requestJson = """
+            {
+              "system_instruction": { "parts": [{ "text": ${escapeJson(systemPrompt)} }] },
+              "contents": [{ "role": "user", "parts": [{ "text": ${escapeJson(LlmPrompt.userPrompt(ocrText))} }] }],
+              "generationConfig": { "temperature": 0.0, "maxOutputTokens": 1024 }
+            }
+        """.trimIndent()
+
+        val request = Request.Builder()
+            .url("$API_URL$apiKey")
+            .addHeader("content-type", "application/json")
+            .post(requestJson.toRequestBody("application/json".toMediaType()))
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) return null
+            val text = response.body?.string() ?: return null
+            val root = Json.parseToJsonElement(text) as? JsonObject ?: return null
+            val content = root["candidates"]?.jsonArray?.firstOrNull()?.jsonObject
+                ?.get("content")?.jsonObject
+                ?.get("parts")?.jsonArray?.firstOrNull()?.jsonObject
+                ?.get("text")?.jsonPrimitive?.contentOrNull
+                ?: return null
+            return LlmResponseParser.parse(content, engineId)
+        }
+    }
+
+    private fun hasUsefulData(r: LlmExtractionResult) =
+        !r.senderName.isNullOrBlank() || !r.receiverName.isNullOrBlank() || r.amount != null
+
     private fun escapeJson(s: String): String =
         kotlinx.serialization.json.JsonPrimitive(s).toString()
 
     companion object {
         private const val API_URL =
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
-        private const val MODEL_REF = "gemini-1.5-flash"
     }
 }

@@ -1,15 +1,31 @@
 package com.azzam.receiptscanner.llm
 
 /**
- * الـ Prompt الموحّد المُحسَّن مع تقنية Few-Shot Learning.
+ * الـ Prompt الموحّد المُحسَّن مع تقنيات متقدمة:
+ *  1. Few-Shot Learning (مثالان محدّدان)
+ *  2. Hints-aware: يقبل مستخرَجات Regex المؤكّدة كقرائن
+ *  3. FALLBACK_PROMPT: تعليمات أصرم للمرحلة الثانية عند فشل الأولى
  *
- * التحسين: أضفنا مثالين محدّدين يوضحان:
- *  1. كيفية استخراج البيانات من نص فوضوي
- *  2. التمييز الدقيق بين 'اسم المرسل' و'اسم المستلم'
- *
- * Few-Shot يحسّن الدقة بنسبة كبيرة لأن النموذج يرى النمط المتوقع.
+ * الهدف: منع الهلوسة وتقليل الأخطاء لدرجة الصفر.
  */
 object LlmPrompt {
+
+    /**
+     * Prompt المرحلة الأولى — مع hints اختيارية من Regex.
+     * @param hints مستخرَجات مؤكّدة (المبلغ/التاريخ/IBAN) لتوجيه النموذج
+     */
+    fun systemPromptWithHints(hints: ExtractionHints? = null): String {
+        val hintsBlock = if (hints != null) {
+            buildString {
+                append("\n\nقرائن مؤكّدة من Regex (استخدمها كحقائق، لا تخمّلها):\n")
+                hints.amount?.let { append("- المبلغ المؤكّد: $it\n") }
+                hints.date?.let { append("- التاريخ المؤكّد: $it\n") }
+                hints.iban?.let { append("- IBAN/حساب: $it\n") }
+                append("\nركّز فقط على استخراج: اسم المرسل، اسم المستلم، وتأكيد البنك.\n")
+            }
+        } else ""
+        return SYSTEM_PROMPT + hintsBlock
+    }
 
     val SYSTEM_PROMPT: String = """
 خبير مالي سعودي. استخرج بيانات حوالة من نص OCR فوضوي.
@@ -19,8 +35,8 @@ object LlmPrompt {
 - لا تخمن. الحقل غير الواضح يبقى "".
 - المبلغ: أرقام فقط (1234.56) بلا عملة.
 - التاريخ: YYYY-MM-DD فقط.
-- sender_name: اسم/حساب المرسل (بعد كلمة From/من/Prepared for).
-- receiver_name: اسم/حساب المستلم (بعد كلمة To/Beneficiary/إلى/المستفيد).
+- sender_name: اسم/حساب المرسل (بعد From/من/Prepared for).
+- receiver_name: اسم/حساب المستلم (بعد To/Beneficiary/إلى/المستفيد).
 
 أمثلة:
 
@@ -34,5 +50,36 @@ object LlmPrompt {
 {"sender_name":"","receiver_name":"","amount":"","date":""}
 """.trim()
 
+    /**
+     * Prompt بديل للمرحلة الثانية (Fallback) — تعليمات أصرم لمنع الهلوسة.
+     * يُستخدم عند فشل المرحلة الأولى أو إرجاع JSON فارغ.
+     */
+    val FALLBACK_PROMPT: String = """
+خبير مالي. مهامك صارمة جداً — لا تخمّل أبداً.
+
+إن لم تجد حوالة بنكية واضحة، أعد JSON فارغاً فوراً.
+
+قواعد استخراج الإيصال:
+- sender_name: ابحث عن "From/من/Prepared for" والقيمة بعدها مباشرة.
+- receiver_name: ابحث عن "To/Beneficiary/إلى/المستفيد" والقيمة بعدها.
+- amount: الرقم بجوار SAR/ر.س/Amount. بلا عملة.
+- date: YYYY-MM-DD فقط.
+
+ممنوع:
+- إرجاع IBAN كاسم (استخدمه كاسم فقط إن لم يوجد اسم نصّي)
+- تخمين تاريخ غير موجود في النص
+- تخمين مبلغ غير موجود
+
+ردّ JSON فقط:
+{"sender_name":"","receiver_name":"","amount":"","date":""}
+""".trim()
+
     fun userPrompt(ocrText: String): String = "نص OCR:\n$ocrText"
 }
+
+/** مستخرَجات Regex المؤكّدة لتضمينها كـ hints في الـ Prompt. */
+data class ExtractionHints(
+    val amount: Double? = null,
+    val date: String? = null,
+    val iban: String? = null
+)
