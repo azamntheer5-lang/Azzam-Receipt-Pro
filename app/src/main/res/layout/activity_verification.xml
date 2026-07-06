@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  شاشة المراجعة والمطابقة (Side-by-Side Verification) — Modern Minimalist
+  النصف العلوي: عرض الملف الأصلي (صورة/PDF) مع Pinch-to-Zoom
+  النصف السفلي: حقول قابلة للتعديل + زر حفظ
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/verificationToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@android:color/transparent"
+        app:titleTextColor="@color/text_primary"
+        app:navigationIcon="?attr/homeAsUpIndicator" />
+
+    <!-- النصف العلوي: عرض الملف الأصلي (40% من الشاشة) -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.4"
+        android:background="@color/background_dark">
+
+        <com.azzam.receiptscanner.ui.ZoomableImageView
+            android:id="@+id/imagePreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true" />
+
+        <ProgressBar
+            android:id="@+id/previewProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/previewError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="24dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@android:drawable/ic_menu_gallery"
+                app:tint="@color/text_hint"
+                android:alpha="0.4" />
+
+            <TextView
+                android:id="@+id/textPreviewError"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/verification_no_preview"
+                android:textColor="@color/text_hint"
+                android:textSize="13sp"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- زر إعادة ضبط التكبير -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonResetZoom"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="8dp"
+            android:text="@string/verification_reset_zoom"
+            android:textColor="@color/accent"
+            android:textSize="11sp"
+            app:icon="@android:drawable/ic_menu_rotate"
+            app:iconTint="@color/accent" />
+    </FrameLayout>
+
+    <!-- فاصل رفيع -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider" />
+
+    <!-- النصف السفلي: الحقول القابلة للتعديل (60% من الشاشة) -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.6">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/verification_edit_fields"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary" />
+
+            <!-- المرسل -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="@string/field_sender">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editSender"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- المستلم -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:hint="@string/field_recipient">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRecipient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- المبلغ + البنك (في صف واحد) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:hint="@string/field_amount"
+                    app:prefixText="SAR ">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editAmount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:hint="@string/field_bank">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editBank"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <!-- التاريخ -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:hint="@string/field_date">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- النص الخام (طيّ) -->
+            <TextView
+                android:id="@+id/textRawLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/edit_raw_text_section"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/textRawOcr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="@color/card_background"
+                android:padding="12dp"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary"
+                android:fontFamily="monospace"
+                android:maxLines="6"
+                android:ellipsize="end"
+                android:scrollbars="vertical"
+                android:textIsSelectable="true" />
+
+            <!-- أزرار الحفظ والحذف -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonDelete"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:text="@string/delete"
+                    android:textColor="@color/confidence_low"
+                    app:strokeColor="@color/confidence_low" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonSave"
+                    android:layout_width="0dp"
+                    android:layout_weight="1.5"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/save"
+                    android:backgroundTint="@color/accent"
+                    android:textColor="@color/text_on_accent"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

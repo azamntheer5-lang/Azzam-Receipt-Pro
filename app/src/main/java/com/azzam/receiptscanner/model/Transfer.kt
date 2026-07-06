@@ -18,5 +18,7 @@ data class Transfer(
     val rawText: String = "",
     // اسم المحرك المستخدم للاستخراج السحابي (claude/gemini/groq/huggingface)،
     // أو null إن استُخرج محلياً فقط — مفيد للتشخيص ولفلترة السجلات
-    val llmEngineUsed: String? = null
+    val llmEngineUsed: String? = null,
+    /** المسار الأصلي للملف/URI — لشاشة المراجعة (Side-by-Side Verification). */
+    val originalFilePath: String? = null
 )

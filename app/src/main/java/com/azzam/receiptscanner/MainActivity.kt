@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.title = getString(R.string.app_name)
 
         adapter = TransferAdapter(
-            onTapEdit = { showEditDialog(it) },
+            onTapEdit = { openVerificationScreen(it.id) },
             onLongPressDelete = { viewModel.deleteTransfer(it.id) }
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -419,10 +419,19 @@ class MainActivity : AppCompatActivity() {
         sourceFileName = sourceFileName,
         processedAt = processedAt,
         rawText = rawText,
-        llmEngineUsed = llmEngineUsed
+        llmEngineUsed = llmEngineUsed,
+        originalFilePath = originalFilePath
     )
 
     // ---------- تعديل سجل يدوياً ----------
+
+    /** ★ يفتح شاشة المراجعة والمطابقة (Side-by-Side Verification). */
+    private fun openVerificationScreen(receiptId: String) {
+        val intent = Intent(this, com.azzam.receiptscanner.ui.ReceiptVerificationActivity::class.java)
+        intent.putExtra(com.azzam.receiptscanner.ui.ReceiptVerificationActivity.EXTRA_RECEIPT_ID, receiptId)
+        startActivity(intent)
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    }
 
     private fun showEditDialog(transfer: Transfer) {
         val dialogBinding = DialogEditTransferBinding.inflate(layoutInflater)

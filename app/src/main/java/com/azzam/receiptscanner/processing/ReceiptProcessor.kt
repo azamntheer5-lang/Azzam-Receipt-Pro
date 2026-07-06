@@ -123,7 +123,9 @@ object ReceiptProcessor {
             sourceFileName = file.name,
             processedAt = System.currentTimeMillis(),
             rawText = ocrText.take(500),
-            llmEngineUsed = llmEngineUsed
+            llmEngineUsed = llmEngineUsed,
+            // ★ حفظ المسار الأصلي للملف لشاشة المراجعة
+            originalFilePath = file.absolutePath
         )
 
         TransferRepository.addTransfer(context, transfer)

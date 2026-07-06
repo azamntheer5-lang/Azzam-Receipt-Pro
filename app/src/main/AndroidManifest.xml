@@ -51,6 +51,11 @@
             android:exported="false"
             android:label="@string/detail_title" />
 
+        <activity
+            android:name=".ui.ReceiptVerificationActivity"
+            android:exported="false"
+            android:label="@string/verification_title" />
+
         <service
             android:name=".ReceiptWatcherService"
             android:foregroundServiceType="dataSync"

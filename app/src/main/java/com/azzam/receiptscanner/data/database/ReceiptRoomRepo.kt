@@ -150,5 +150,6 @@ private fun Transfer.toEntity(): ReceiptData = ReceiptData(
     sourceFileName = sourceFileName,
     processedAt = processedAt,
     rawText = rawText,
-    llmEngineUsed = llmEngineUsed
+    llmEngineUsed = llmEngineUsed,
+    originalFilePath = originalFilePath
 )

@@ -59,6 +59,18 @@
     <string name="edit_raw_text_section">النص الخام المستخرَج (للمراجعة)</string>
     <string name="edit_raw_text_empty">لا يوجد نص خام متاح</string>
 
+    <!-- شاشة المراجعة والمطابقة -->
+    <string name="verification_title">مراجعة الإيصال</string>
+    <string name="verification_edit_fields">الحقول المستخرجة (قابلة للتعديل)</string>
+    <string name="verification_no_preview">المعاينة غير متاحة</string>
+    <string name="verification_no_path">لا يوجد مسار ملف محفوظ</string>
+    <string name="verification_load_failed">تعذّر تحميل الملف</string>
+    <string name="verification_reset_zoom">إعادة الضبط</string>
+    <string name="verification_saved">تم حفظ التعديلات</string>
+    <string name="verification_deleted">تم حذف السجل</string>
+    <string name="verification_delete_confirm">هل تريد حذف هذا السجل نهائياً؟</string>
+    <string name="field_bank">البنك</string>
+
     <!-- بطاقة القائمة (المرحلة 3) -->
     <string name="card_from_label">من</string>
     <string name="card_to_label">إلى</string>
