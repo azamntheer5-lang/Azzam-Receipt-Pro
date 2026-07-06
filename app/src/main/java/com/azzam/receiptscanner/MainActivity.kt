@@ -362,28 +362,45 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * ★ فحص فوري في lifecycleScope — يضمن ظهور النتائج والتقرير.
+     * يعرض ProgressDialog أثناء الفحص (قد يستغرق دقائق لمئات الصور).
      */
     private fun runImmediateScan(isAuto: Boolean) {
-        if (isAuto) {
-            Toast.makeText(this, R.string.auto_scan_started, Toast.LENGTH_LONG).show()
-        }
+        // ★ اعرض ProgressDialog فوراً ليعرف المستخدم أن الفحص بدأ
+        val progressDialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("⏳ جارٍ الفحص...")
+            .setMessage("نفحص مجلدات واتساب والصور.\nقد يستغرق عدة دقائق لمئات الملفات.\nالرجاء الانتظار...")
+            .setCancelable(false)
+            .create()
+        progressDialog.show()
+
         lifecycleScope.launch {
-            val report = withContext(Dispatchers.IO) {
-                com.azzam.receiptscanner.processing.ImmediateScanner.scanNow(this@MainActivity)
+            val report = try {
+                withContext(Dispatchers.IO) {
+                    com.azzam.receiptscanner.processing.ImmediateScanner.scanNow(this@MainActivity)
+                }
+            } catch (e: Exception) {
+                "❌ خطأ أثناء الفحص: ${e.message?.take(100) ?: "غير معروف"}\n\n" +
+                    "نوع الخطأ: ${e::class.simpleName}"
             }
-            // ★ اعرض التقرير في AlertDialog (موثوق أكثر من Toast)
+            // ★ أخفِ ProgressDialog ثم اعرض التقرير
+            progressDialog.dismiss()
             showScanReport(report, isAuto)
         }
     }
 
-    /** يعرض تقرير الفحص في AlertDialog. */
+    /** يعرض تقرير الفحص في AlertDialog — مضمون الظهور. */
     private fun showScanReport(report: String, isAuto: Boolean) {
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle(if (isAuto) "نتيجة الفحص التلقائي" else "نتيجة الفحص اليدوي")
-            .setMessage(report)
-            .setPositiveButton(R.string.confirm, null)
-            .setCancelable(false)
-            .show()
+        try {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(if (isAuto) "📊 نتيجة الفحص التلقائي" else "📊 نتيجة الفحص اليدوي")
+                .setMessage(report)
+                .setPositiveButton(R.string.confirm) { _, _ -> }
+                .setCancelable(false)
+                .show()
+        } catch (e: Exception) {
+            // fallback: Toast إن فشل AlertDialog
+            Toast.makeText(this, report, Toast.LENGTH_LONG).show()
+        }
     }
 
     /** يبدأ المعالجة بالجملة لمجلد كامل عبر BatchScanWorker. */
