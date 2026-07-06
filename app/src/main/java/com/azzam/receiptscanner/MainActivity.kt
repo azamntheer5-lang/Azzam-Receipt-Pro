@@ -319,6 +319,9 @@ class MainActivity : AppCompatActivity() {
         if (granted) {
             requestNotificationPermissionIfNeeded()
             startServices()
+        } else {
+            // ★ Toast تشخيصي واضح
+            Toast.makeText(this, R.string.permission_needed_toast, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -353,9 +356,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun triggerManualScan() {
-        // ★ استخدم triggerImmediateScan للفحص الفوري العميق
+        // ★ تأكيد فوري للمستخدم أن الزر يعمل
+        Toast.makeText(this, R.string.scan_started, Toast.LENGTH_SHORT).show()
+        // ★ أعد ضبط الملفات المعالَجة قبل الفحص اليدوي أيضاً
+        com.azzam.receiptscanner.storage.ProcessedFilesTracker.resetAll(this)
+        // ★ فحص فوري عميق
         PeriodicScanWorker.triggerImmediateScan(this)
-        toast(R.string.scan_started)
     }
 
     /** يبدأ المعالجة بالجملة لمجلد كامل عبر BatchScanWorker. */

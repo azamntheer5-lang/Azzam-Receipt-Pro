@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  الشاشة الرئيسية (Modern Minimalist) — نظيفة، هادئة، مساحات بيضاء واسعة
+  الشاشة الرئيسية (Modern Minimalist) — هيكلية صحيحة
+ LinearLayout عمودي: محتوى + BottomNav
+  FAB يطفو فوق كل شيء في FrameLayout خارجي
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -9,293 +11,312 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- ===== حاوية الإذن ===== -->
+    <!-- ===== الحاوية العمودية: محتوى + BottomNav ===== -->
     <LinearLayout
-        android:id="@+id/permissionContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="40dp"
-        android:visibility="gone">
+        android:orientation="vertical">
 
-        <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/ic_receipt_modern"
-            app:tint="@color/accent"
-            android:alpha="0.6" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/permission_required_title"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:gravity="center" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/permission_required_desc"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:gravity="center"
-            android:lineSpacingExtra="4dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonGrantPermission"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:paddingStart="32dp"
-            android:paddingEnd="32dp"
-            android:paddingTop="14dp"
-            android:paddingBottom="14dp"
-            android:text="@string/grant_permission"
-            android:backgroundTint="@color/accent"
-            android:textColor="@color/text_on_accent"
-            app:cornerRadius="12dp" />
-    </LinearLayout>
-
-    <!-- ===== الحاوية الرئيسية ===== -->
-    <LinearLayout
-        android:id="@+id/mainContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
+        <!-- ===== حاوية الإذن ===== -->
+        <LinearLayout
+            android:id="@+id/permissionContainer"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@android:color/transparent"
-            app:titleTextColor="@color/text_primary" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="40dp"
+            android:visibility="gone">
 
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/scrollContent"
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_receipt_modern"
+                app:tint="@color/accent"
+                android:alpha="0.6" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/permission_required_title"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/permission_required_desc"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonGrantPermission"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:paddingStart="32dp"
+                android:paddingEnd="32dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="14dp"
+                android:text="@string/grant_permission"
+                android:backgroundTint="@color/accent"
+                android:textColor="@color/text_on_accent"
+                app:cornerRadius="12dp" />
+        </LinearLayout>
+
+        <!-- ===== الحاوية الرئيسية ===== -->
+        <LinearLayout
+            android:id="@+id/mainContainer"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:fillViewport="true"
-            android:clipToPadding="false">
+            android:orientation="vertical"
+            android:visibility="gone">
 
-            <LinearLayout
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_height="?attr/actionBarSize"
+                android:background="@android:color/transparent"
+                app:titleTextColor="@color/text_primary" />
 
-                <!-- ===== بطاقة الإجمالي (Minimalist) ===== -->
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/scrollContent"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:fillViewport="true"
+                android:clipToPadding="false">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:orientation="vertical"
-                    android:background="@color/card_background"
-                    android:padding="28dp"
-                    android:elevation="0dp">
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/hero_total_label"
-                        android:textColor="@color/text_hint"
-                        android:textSize="12sp"
-                        android:letterSpacing="0.08" />
-
-                    <TextView
-                        android:id="@+id/textTotal"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textColor="@color/text_primary"
-                        android:textSize="40sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="-0.03"
-                        tools:text="12,345.67" />
-
+                    <!-- ===== بطاقة الإجمالي ===== -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:orientation="vertical"
+                        android:background="@color/card_background"
+                        android:padding="28dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/hero_total_label"
+                            android:textColor="@color/text_hint"
+                            android:textSize="12sp"
+                            android:letterSpacing="0.08" />
+
+                        <TextView
+                            android:id="@+id/textTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="@color/text_primary"
+                            android:textSize="40sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="-0.03"
+                            tools:text="12,345.67" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="20dp"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/textCount"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp"
+                                tools:text="42 إيصال" />
+
+                            <TextView
+                                android:id="@+id/textNeedsReview"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/confidence_low"
+                                android:textSize="12sp"
+                                android:visibility="gone"
+                                tools:text="3 يحتاج مراجعة" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- ===== شريط البحث ===== -->
+                    <EditText
+                        android:id="@+id/editSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
                         android:layout_marginTop="20dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:background="@color/card_background"
+                        android:hint="@string/search_hint"
+                        android:inputType="text"
+                        android:imeOptions="actionSearch"
+                        android:maxLines="1"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint"
+                        android:textSize="14sp" />
+
+                    <!-- ===== Filter Chips للبنوك ===== -->
+                    <HorizontalScrollView
+                        android:id="@+id/bankFiltersScroll"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginTop="12dp"
+                        android:scrollbars="none">
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/bankChips"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:singleSelection="true"
+                            app:chipSpacingHorizontal="8dp" />
+                    </HorizontalScrollView>
+
+                    <!-- ===== أزرار الفلترة الزمنية ===== -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginTop="8dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
 
-                        <TextView
-                            android:id="@+id/textCount"
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipDateFrom"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="@string/filter_date_from"
+                            app:chipIconVisible="true"
+                            app:chipIcon="@android:drawable/ic_menu_today"
+                            app:chipBackgroundColor="@color/card_background"
                             android:textColor="@color/text_secondary"
-                            android:textSize="13sp"
-                            tools:text="42 إيصال" />
+                            app:chipStrokeColor="@color/divider"
+                            app:chipStrokeWidth="1dp" />
 
                         <TextView
-                            android:id="@+id/textNeedsReview"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/confidence_low"
-                            android:textSize="12sp"
-                            android:visibility="gone"
-                            tools:text="3 يحتاج مراجعة" />
+                            android:layout_marginStart="6dp"
+                            android:layout_marginEnd="6dp"
+                            android:text="—"
+                            android:textColor="@color/text_hint" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipDateTo"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="@string/filter_date_to"
+                            app:chipIconVisible="true"
+                            app:chipIcon="@android:drawable/ic_menu_today"
+                            app:chipBackgroundColor="@color/card_background"
+                            android:textColor="@color/text_secondary"
+                            app:chipStrokeColor="@color/divider"
+                            app:chipStrokeWidth="1dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipClearFilters"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:text="@string/filter_clear"
+                            app:chipBackgroundColor="@color/background_dark"
+                            android:textColor="@color/text_secondary" />
                     </LinearLayout>
-                </LinearLayout>
 
-                <!-- ===== شريط البحث (Minimalist) ===== -->
-                <EditText
-                    android:id="@+id/editSearch"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_marginTop="20dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:background="@color/card_background"
-                    android:hint="@string/search_hint"
-                    android:inputType="text"
-                    android:imeOptions="actionSearch"
-                    android:maxLines="1"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
-                    android:textSize="14sp" />
-
-                <!-- ===== Filter Chips للبنوك (قابل للتمرير الأفقي) ===== -->
-                <HorizontalScrollView
-                    android:id="@+id/bankFiltersScroll"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_marginTop="12dp"
-                    android:scrollbars="none">
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/bankChips"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:chipSpacingHorizontal="8dp" />
-                </HorizontalScrollView>
-
-                <!-- ===== أزرار الفلترة الزمنية ===== -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipDateFrom"
-                        style="@style/Widget.MaterialComponents.Chip.Action"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="@string/filter_date_from"
-                        app:chipIconVisible="true"
-                        app:chipIcon="@android:drawable/ic_menu_today"
-                        app:chipBackgroundColor="@color/card_background"
-                        android:textColor="@color/text_secondary"
-                        app:chipStrokeColor="@color/divider"
-                        app:chipStrokeWidth="1dp" />
-
+                    <!-- ===== عنوان القائمة ===== -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_marginEnd="6dp"
-                        android:text="—"
-                        android:textColor="@color/text_hint" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipDateTo"
-                        style="@style/Widget.MaterialComponents.Chip.Action"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="@string/filter_date_to"
-                        app:chipIconVisible="true"
-                        app:chipIcon="@android:drawable/ic_menu_today"
-                        app:chipBackgroundColor="@color/card_background"
-                        android:textColor="@color/text_secondary"
-                        app:chipStrokeColor="@color/divider"
-                        app:chipStrokeWidth="1dp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipClearFilters"
-                        style="@style/Widget.MaterialComponents.Chip.Action"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:text="@string/filter_clear"
-                        app:chipBackgroundColor="@color/background_dark"
-                        android:textColor="@color/text_secondary" />
-                </LinearLayout>
-
-                <!-- ===== عنوان القائمة ===== -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginTop="28dp"
-                    android:layout_marginBottom="4dp"
-                    android:text="@string/recent_transfers_title"
-                    android:textStyle="bold"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_secondary"
-                    android:letterSpacing="0.05" />
-
-                <!-- ===== حالة فارغة ===== -->
-                <LinearLayout
-                    android:id="@+id/textEmpty"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="80dp"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="24dp"
-                    android:visibility="gone">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_receipt_modern"
-                        app:tint="@color/text_hint"
-                        android:alpha="0.3" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="@string/empty_list"
-                        android:textColor="@color/text_hint"
+                        android:layout_marginStart="24dp"
+                        android:layout_marginTop="28dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/recent_transfers_title"
+                        android:textStyle="bold"
                         android:textSize="13sp"
-                        android:gravity="center" />
-                </LinearLayout>
+                        android:textColor="@color/text_secondary"
+                        android:letterSpacing="0.05" />
 
-                <!-- ===== القائمة ===== -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"
-                    android:clipToPadding="false"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="100dp"
-                    tools:listitem="@layout/item_transfer" />
-            </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+                    <!-- ===== حالة فارغة ===== -->
+                    <LinearLayout
+                        android:id="@+id/textEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="80dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="24dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/ic_receipt_modern"
+                            app:tint="@color/text_hint"
+                            android:alpha="0.3" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="@string/empty_list"
+                            android:textColor="@color/text_hint"
+                            android:textSize="13sp"
+                            android:gravity="center" />
+                    </LinearLayout>
+
+                    <!-- ===== القائمة ===== -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:clipToPadding="false"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="100dp"
+                        tools:listitem="@layout/item_transfer" />
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+        </LinearLayout>
+
+        <!-- ===== BottomNav في أسفل الـ LinearLayout ===== -->
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_background"
+            app:menu="@menu/bottom_nav_menu"
+            app:labelVisibilityMode="labeled"
+            app:itemIconTint="@color/primary"
+            app:itemTextColor="@color/primary"
+            app:elevation="8dp" />
     </LinearLayout>
 
-    <!-- ===== FAB ===== -->
+    <!-- ★ FAB يطفو فوق كل شيء (آخر عنصر = أعلى z-order) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabScanNow"
         android:layout_width="wrap_content"
@@ -307,20 +328,7 @@
         android:src="@drawable/ic_receipt_modern"
         app:backgroundTint="@color/accent"
         app:tint="@color/text_on_accent"
-        app:elevation="4dp"
+        app:elevation="8dp"
         app:fabSize="normal" />
-
-    <!-- ===== شريط التنقل ===== -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="@color/card_background"
-        app:menu="@menu/bottom_nav_menu"
-        app:labelVisibilityMode="labeled"
-        app:itemIconTint="@color/primary"
-        app:itemTextColor="@color/primary"
-        app:elevation="8dp" />
 
 </FrameLayout>

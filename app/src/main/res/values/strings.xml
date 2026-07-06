@@ -2,6 +2,7 @@
     <string name="app_name">Receipt Scanner Pro</string>
     <string name="permission_required_title">صلاحية الوصول للملفات مطلوبة</string>
     <string name="permission_required_desc">التطبيق يحتاج صلاحية الوصول الكامل للملفات حتى يراقب مجلد واتساب تلقائياً ويكتشف الإيصالات الجديدة.</string>
+    <string name="permission_needed_toast">⚠️ صلاحية الوصول للملفات غير ممنوحة. اضغط \"منح الصلاحية\" لتفعيل الفحص.</string>
     <string name="grant_permission">منح الصلاحية</string>
     <string name="scan_now">مسح الآن</string>
     <string name="auto_scan_started">جارٍ الفحص التلقائي للإيصالات… ستحظر النتائج خلال لحظات</string>
