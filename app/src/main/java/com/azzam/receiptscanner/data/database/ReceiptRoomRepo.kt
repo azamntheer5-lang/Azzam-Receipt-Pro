@@ -54,6 +54,27 @@ object ReceiptRoomRepo {
     fun observeAll(context: Context): Flow<List<ReceiptData>> =
         dao(context).observeAll()
 
+    /**
+     * بحث متقدم موحّد عبر Flow — يدعم:
+     *  - نص البحث (query) في الأسماء/المبلغ/البنك
+     *  - فلتر بنك محدّد
+     *  - فترة زمنية (dateFrom → dateTo)
+     *
+     * يتحدّث فورياً عند تغيّر أي معيار أو البيانات نفسها.
+     */
+    fun search(
+        context: Context,
+        query: String = "",
+        bankId: String? = null,
+        dateFrom: String? = null,
+        dateTo: String? = null
+    ): Flow<List<ReceiptData>> =
+        dao(context).search(query, bankId, dateFrom, dateTo)
+
+    /** قائمة البنوك المتاحة للفلترة (يتم تحديثها تلقائياً). */
+    fun observeDistinctBanks(context: Context): Flow<List<String>> =
+        dao(context).observeDistinctBanks()
+
     // ---------- منطق كشف الحسابات ----------
 
     /**

@@ -165,6 +165,81 @@
                     android:textColorHint="@color/text_hint"
                     android:textSize="14sp" />
 
+                <!-- ===== Filter Chips للبنوك (قابل للتمرير الأفقي) ===== -->
+                <HorizontalScrollView
+                    android:id="@+id/bankFiltersScroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginTop="12dp"
+                    android:scrollbars="none">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/bankChips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:chipSpacingHorizontal="8dp" />
+                </HorizontalScrollView>
+
+                <!-- ===== أزرار الفلترة الزمنية ===== -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipDateFrom"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="@string/filter_date_from"
+                        app:chipIconVisible="true"
+                        app:chipIcon="@android:drawable/ic_menu_today"
+                        app:chipBackgroundColor="@color/card_background"
+                        android:textColor="@color/text_secondary"
+                        app:chipStrokeColor="@color/divider"
+                        app:chipStrokeWidth="1dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:text="—"
+                        android:textColor="@color/text_hint" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipDateTo"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="@string/filter_date_to"
+                        app:chipIconVisible="true"
+                        app:chipIcon="@android:drawable/ic_menu_today"
+                        app:chipBackgroundColor="@color/card_background"
+                        android:textColor="@color/text_secondary"
+                        app:chipStrokeColor="@color/divider"
+                        app:chipStrokeWidth="1dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipClearFilters"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/filter_clear"
+                        app:chipBackgroundColor="@color/background_dark"
+                        android:textColor="@color/text_secondary" />
+                </LinearLayout>
+
                 <!-- ===== عنوان القائمة ===== -->
                 <TextView
                     android:layout_width="wrap_content"

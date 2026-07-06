@@ -37,6 +37,10 @@
     <string name="stat_review">يحتاج مراجعة</string>
 
     <string name="search_hint">ابحث بالاسم أو البنك…</string>
+    <string name="filter_all_banks">الكل</string>
+    <string name="filter_date_from">من تاريخ</string>
+    <string name="filter_date_to">إلى تاريخ</string>
+    <string name="filter_clear">مسح</string>
     <string name="count_format">%d إيصال</string>
     <string name="widget_subtitle_format">%d إيصال</string>
     <string name="widget_total_label">إجمالي الحوالات</string>

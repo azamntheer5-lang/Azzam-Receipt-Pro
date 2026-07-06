@@ -30,6 +30,38 @@ interface ReceiptDao {
     @Query("SELECT * FROM receipts ORDER BY processedAt DESC")
     suspend fun getAll(): List<ReceiptData>
 
+    // ---------- استعلامات البحث المتقدم ----------
+
+    /**
+     * بحث فوري (Live Search) متعدد المعايير عبر Flow.
+     * @param query نص البحث (senderName/recipientName/amount/bankId) — فارغ = الكل
+     * @param bankId فلتر البنك — null = كل البنوك
+     * @param dateFrom تاريخ البداية (yyyy-MM-dd) — null = بدون حد أدنى
+     * @param dateTo تاريخ النهاية (yyyy-MM-dd) — null = بدون حد أعلى
+     */
+    @Query("""
+        SELECT * FROM receipts
+        WHERE (:query = '' OR
+               senderName LIKE '%' || :query || '%' OR
+               recipientName LIKE '%' || :query || '%' OR
+               CAST(amount AS TEXT) LIKE '%' || :query || '%' OR
+               bankId LIKE '%' || :query || '%')
+          AND (:bankId IS NULL OR bankId = :bankId)
+          AND (:dateFrom IS NULL OR date >= :dateFrom)
+          AND (:dateTo IS NULL OR date <= :dateTo)
+        ORDER BY processedAt DESC
+    """)
+    fun search(
+        query: String,
+        bankId: String?,
+        dateFrom: String?,
+        dateTo: String?
+    ): Flow<List<ReceiptData>>
+
+    /** قائمة البنوك المختلفة الموجودة في السجلات (لزرائر الفلترة). */
+    @Query("SELECT DISTINCT bankId FROM receipts ORDER BY bankId")
+    fun observeDistinctBanks(): Flow<List<String>>
+
     @Query("SELECT * FROM receipts WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): ReceiptData?
 

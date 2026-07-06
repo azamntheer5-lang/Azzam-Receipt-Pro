@@ -30,17 +30,25 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.azzam.receiptscanner.backup.BackupManager
+import com.azzam.receiptscanner.data.database.ReceiptRoomRepo
+import com.azzam.receiptscanner.data.entity.ReceiptData
 import com.azzam.receiptscanner.databinding.ActivityMainBinding
 import com.azzam.receiptscanner.databinding.DialogEditTransferBinding
 import com.azzam.receiptscanner.export.CsvExporter
 import com.azzam.receiptscanner.export.PdfReportExporter
 import com.azzam.receiptscanner.model.Transfer
+import com.azzam.receiptscanner.parser.BankMatcher
 import com.azzam.receiptscanner.ui.AccountStatementsActivity
 import com.azzam.receiptscanner.ui.AnalyticsActivity
 import com.azzam.receiptscanner.ui.MainViewModel
 import com.azzam.receiptscanner.ui.SettingsActivity
 import com.azzam.receiptscanner.ui.TransferAdapter
+import com.google.android.material.chip.Chip
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -65,9 +73,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: TransferAdapter
 
     private var fullList: List<Transfer> = emptyList()
-    private var searchQuery: String = ""
     private var pendingBackupPassword: String? = null
     private var pendingRestorePassword: String? = null
+
+    // ★ StateFlows للفلترة المتقدمة (Live Search + Bank + Date Range)
+    private val searchQuery = MutableStateFlow("")
+    private val selectedBank = MutableStateFlow<String?>(null)
+    private val dateFrom = MutableStateFlow<String?>(null)
+    private val dateTo = MutableStateFlow<String?>(null)
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -144,15 +157,91 @@ class MainActivity : AppCompatActivity() {
         binding.fabScanNow.setOnClickListener { triggerManualScan() }
         binding.editSearch.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                searchQuery = s?.toString().orEmpty()
-                render()
+                searchQuery.value = s?.toString().orEmpty()
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
+        setupFilters()
         setupBottomNavigation()
         observeTransfers()
+    }
+
+    /** يربط Filter Chips للبنوك + أزرار الفترة الزمنية + زر المسح. */
+    private fun setupFilters() {
+        // راقب البنوك المتاحة وأضف chips لها
+        lifecycleScope.launch {
+            ReceiptRoomRepo.observeDistinctBanks(this@MainActivity).collect { banks ->
+                renderBankChips(banks)
+            }
+        }
+
+        // أزرار الفترة الزمنية
+        binding.chipDateFrom.setOnClickListener { showDatePicker(true) }
+        binding.chipDateTo.setOnClickListener { showDatePicker(false) }
+
+        // زر مسح الفلاتر
+        binding.chipClearFilters.setOnClickListener {
+            selectedBank.value = null
+            dateFrom.value = null
+            dateTo.value = null
+            binding.editSearch.text.clear()
+            binding.chipDateFrom.text = getString(R.string.filter_date_from)
+            binding.chipDateTo.text = getString(R.string.filter_date_to)
+            // أزل اختيار كل الـ chips
+            binding.bankChips.clearCheck()
+        }
+    }
+
+    /** يبني chips البنوك من السجلات المتاحة. */
+    private fun renderBankChips(banks: List<String>) {
+        binding.bankChips.removeAllViews()
+
+        // chip "الكل"
+        val allChip = Chip(this).apply {
+            text = getString(R.string.filter_all_banks)
+            isCheckable = true
+            isChecked = selectedBank.value == null
+            setOnClickListener {
+                if (isChecked) selectedBank.value = null
+            }
+        }
+        binding.bankChips.addView(allChip)
+
+        // chip لكل بنك
+        for (bankId in banks) {
+            val chip = Chip(this).apply {
+                text = BankMatcher.beautifyBankName(bankId)
+                isCheckable = true
+                isChecked = selectedBank.value == bankId
+                setOnClickListener {
+                    if (isChecked) selectedBank.value = bankId
+                }
+            }
+            binding.bankChips.addView(chip)
+        }
+    }
+
+    /** يفتح Date Picker لاختيار تاريخ from/to. */
+    private fun showDatePicker(isFrom: Boolean) {
+        val cal = Calendar.getInstance()
+        DatePickerDialog(
+            this,
+            { _, year, month, day ->
+                val formatted = "%04d-%02d-%02d".format(year, month + 1, day)
+                if (isFrom) {
+                    dateFrom.value = formatted
+                    binding.chipDateFrom.text = formatted
+                } else {
+                    dateTo.value = formatted
+                    binding.chipDateTo.text = formatted
+                }
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     override fun onResume() {
@@ -259,30 +348,48 @@ class MainActivity : AppCompatActivity() {
         toast(R.string.batch_scan_started)
     }
 
-    // ---------- القائمة + البحث ----------
+    // ---------- القائمة + البحث المتقدم ----------
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeTransfers() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.transfers.collect { list ->
-                    fullList = list
+                // ادمج 4 StateFlows (search + bank + dateFrom + dateTo) وفلتر عبر Room
+                combine(
+                    searchQuery,
+                    selectedBank,
+                    dateFrom,
+                    dateTo
+                ) { query, bank, from, to ->
+                    FilterCriteria(query, bank, from, to)
+                }.flatMapLatest { criteria ->
+                    ReceiptRoomRepo.search(
+                        this@MainActivity,
+                        query = criteria.query,
+                        bankId = criteria.bank,
+                        dateFrom = criteria.dateFrom,
+                        dateTo = criteria.dateTo
+                    )
+                }.collect { receipts ->
+                    // حوّل ReceiptData → Transfer واعرض
+                    val transfers = receipts.map { it.toTransfer() }
+                    fullList = transfers
                     render()
                 }
             }
         }
     }
 
+    /** معايير الفلترة المدمجة. */
+    private data class FilterCriteria(
+        val query: String,
+        val bank: String?,
+        val dateFrom: String?,
+        val dateTo: String?
+    )
+
     private fun render() {
-        val filtered = if (searchQuery.isBlank()) {
-            fullList
-        } else {
-            fullList.filter {
-                it.recipientName?.contains(searchQuery, ignoreCase = true) == true ||
-                    it.senderName?.contains(searchQuery, ignoreCase = true) == true ||
-                    it.bankId.contains(searchQuery, ignoreCase = true)
-            }
-        }
-        val sorted = filtered.sortedByDescending { it.processedAt }
+        val sorted = fullList.sortedByDescending { it.processedAt }
         adapter.submitList(sorted)
         binding.textEmpty.visibility = if (sorted.isEmpty()) View.VISIBLE else View.GONE
 
@@ -299,6 +406,21 @@ class MainActivity : AppCompatActivity() {
             binding.textNeedsReview.visibility = View.GONE
         }
     }
+
+    /** تحويل ReceiptData → Transfer لعرضه في Adapter. */
+    private fun ReceiptData.toTransfer(): Transfer = Transfer(
+        id = id,
+        senderName = senderName,
+        recipientName = recipientName,
+        amount = amount,
+        date = date,
+        bankId = bankId,
+        confidence = confidence,
+        sourceFileName = sourceFileName,
+        processedAt = processedAt,
+        rawText = rawText,
+        llmEngineUsed = llmEngineUsed
+    )
 
     // ---------- تعديل سجل يدوياً ----------
 
