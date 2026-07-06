@@ -27,6 +27,33 @@ object LlmPrompt {
         return SYSTEM_PROMPT + hintsBlock
     }
 
+    /**
+     * Prompt للـ Vision API — يستقبل صورة مباشرة بدون OCR محلي.
+     * Claude/Gemini يقرآن العربية من الصورة بدقة عالية.
+     */
+    val VISION_PROMPT: String = """
+خبير مالي سعودي. استخرج بيانات الحوالة من صورة الإيصال.
+
+قواعد:
+- ليس إيصال حوالة؟ أعد JSON بكل الحقول فارغة.
+- لا تخمن. الحقل غير الواضح يبقى "".
+- المبلغ: أرقام فقط (1234.56) بلا عملة.
+- التاريخ: YYYY-MM-DD فقط.
+- sender_name: اسم/حساب المرسل (بعد From/من/Prepared for).
+- receiver_name: اسم/حساب المستلم (بعد To/Beneficiary/إلى/المستفيد).
+
+أمثلة:
+
+الإيصال: صورة حوالة D360 بها "Money Sent Successfully! 50.00" و"From: JANA ADEL"
+الرد: {"sender_name":"JANA ADEL A ALMAGHRABI","receiver_name":"مريم محمد علي","amount":"50.00","date":"2026-07-05"}
+
+الإيصال: صورة حوالة SNB بها "Prepared for: RAZAN ALI" و"Beneficiary: سليمان العنزي"
+الرد: {"sender_name":"RAZAN ALI A ALMALKI","receiver_name":"سليمان العنزي","amount":"134.00","date":"2026-07-05"}
+
+ردّ JSON فقط بلا ```json:
+{"sender_name":"","receiver_name":"","amount":"","date":""}
+""".trim()
+
     val SYSTEM_PROMPT: String = """
 خبير مالي سعودي. استخرج بيانات حوالة من نص OCR فوضوي.
 

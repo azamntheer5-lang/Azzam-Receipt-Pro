@@ -1,5 +1,6 @@
 package com.azzam.receiptscanner.llm
 
+import android.util.Base64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -16,15 +17,14 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
- * محرك Anthropic Claude — مع آلية إعادة محاولة ذكية (Smart Retry).
+ * محرك Anthropic Claude — Vision API مباشر (بدون OCR محلي).
  *
- * التحسين:
- *  - temperature=0.0 لضمان مخرجات حتمية (deterministic)
- *  - retry مرة واحدة تلقائياً عند فشل الاستخراج أو JSON فارغ
- *  - max_tokens مرفوع إلى 1024 لتجنب القطع
+ * يرسل الصورة/PDF كـ base64 للـ API، ويستخرج البيانات كاملة.
+ * Claude يقرأ العربية بدقة عالية عبر Vision.
  */
 class ClaudeLlmEngine : LlmEngine {
 
@@ -32,62 +32,63 @@ class ClaudeLlmEngine : LlmEngine {
     override val displayName = "Claude (Anthropic)"
 
     private val client = OkHttpClient.Builder()
-        .connectTimeout(20, TimeUnit.SECONDS)
-        .readTimeout(45, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
         .build()
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
-    override suspend fun extract(ocrText: String, apiKey: String): LlmExtractionResult? =
+    override suspend fun extractFromFile(file: File, apiKey: String): LlmExtractionResult? =
         withContext(Dispatchers.IO) {
-            if (apiKey.isBlank() || ocrText.isBlank()) return@withContext null
+            if (apiKey.isBlank() || !file.exists()) return@withContext null
             try {
-                val result1 = callApi(ocrText, apiKey, LlmPrompt.systemPromptWithHints(null))
+                val result1 = callVisionApi(file, apiKey, LlmPrompt.VISION_PROMPT)
                 if (result1 != null && hasUsefulData(result1)) return@withContext result1
-                val result2 = callApi(ocrText, apiKey, LlmPrompt.FALLBACK_PROMPT)
+                val result2 = callVisionApi(file, apiKey, LlmPrompt.FALLBACK_PROMPT)
                 result2 ?: result1
-            } catch (e: Exception) {
-                null
+            } catch (e: Exception) { null }
+        }
+
+    private fun callVisionApi(file: File, apiKey: String, systemPrompt: String): LlmExtractionResult? {
+        val base64Data = Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)
+        val isPdf = file.extension.lowercase() == "pdf"
+        val mediaType = if (isPdf) "application/pdf" else guessImageMime(file)
+
+        val mediaBlock = buildJsonObject {
+            put("type", if (isPdf) "document" else "image")
+            putJsonObject("source") {
+                put("type", "base64")
+                put("media_type", mediaType)
+                put("data", base64Data)
             }
         }
 
-    /** ★ يستخرج مع تضمين hints من Regex كقرائن مؤكّدة. */
-    override suspend fun extractWithHints(
-        ocrText: String,
-        apiKey: String,
-        hints: ExtractionHints?
-    ): LlmExtractionResult? = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank() || ocrText.isBlank()) return@withContext null
-        try {
-            // المرحلة الأولى: hints-aware prompt
-            val result1 = callApi(ocrText, apiKey, LlmPrompt.systemPromptWithHints(hints))
-            if (result1 != null && hasUsefulData(result1)) return@withContext result1
-            // المرحلة الثانية: fallback prompt صارم
-            val result2 = callApi(ocrText, apiKey, LlmPrompt.FALLBACK_PROMPT)
-            result2 ?: result1
-        } catch (e: Exception) { null }
-    }
-
-    /** يستدعي Claude API مع prompt محدّد. */
-    private fun callApi(ocrText: String, apiKey: String, systemPrompt: String): LlmExtractionResult? {
         val requestJson = buildJsonObject {
             put("model", MODEL)
             put("max_tokens", 1024)
-            put("temperature", 0.0) // ★ حتمية كاملة
+            put("temperature", 0.0)
             put("system", systemPrompt)
             putJsonArray("messages") {
                 addJsonObject {
                     put("role", "user")
-                    put("content", LlmPrompt.userPrompt(ocrText))
+                    putJsonArray("content") {
+                        add(mediaBlock)
+                        addJsonObject {
+                            put("type", "text")
+                            put("text", "استخرج بيانات هذه الحوالة. ارد JSON فقط.")
+                        }
+                    }
                 }
             }
         }
+
         val body = requestJson.toString().toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
             .url(API_URL)
             .addHeader("x-api-key", apiKey)
             .addHeader("anthropic-version", "2023-06-01")
             .addHeader("content-type", "application/json")
+            .apply { if (isPdf) addHeader("anthropic-beta", "pdfs-2024-09-25") }
             .post(body)
             .build()
 
@@ -106,11 +107,13 @@ class ClaudeLlmEngine : LlmEngine {
         }
     }
 
-    /** يتحقق أن النتيجة تحوي بيانات مفيدة (وليست JSON فارغاً). */
-    private fun hasUsefulData(result: LlmExtractionResult): Boolean {
-        return !result.senderName.isNullOrBlank() ||
-            !result.receiverName.isNullOrBlank() ||
-            result.amount != null
+    private fun hasUsefulData(r: LlmExtractionResult) =
+        !r.senderName.isNullOrBlank() || !r.receiverName.isNullOrBlank() || r.amount != null
+
+    private fun guessImageMime(file: File): String = when (file.extension.lowercase()) {
+        "png" -> "image/png"
+        "webp" -> "image/webp"
+        else -> "image/jpeg"
     }
 
     companion object {

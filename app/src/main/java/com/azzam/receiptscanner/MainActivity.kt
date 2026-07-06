@@ -346,16 +346,11 @@ class MainActivity : AppCompatActivity() {
         val serviceIntent = Intent(this, ReceiptWatcherService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
         PeriodicScanWorker.schedule(this)
-
-        // ★ أعد ضبط الملفات المعالَجة
-        com.azzam.receiptscanner.storage.ProcessedFilesTracker.resetAll(this)
-
-        // ★ فحص فوري تلقائي في lifecycleScope (ليس WorkManager)
-        runImmediateScan(isAuto = true)
+        // ★ لا فحص تلقائي — المستخدم يضغط FAB لبدء الفحص عبر API
+        // (الفحص عبر API يستغرق وقتاً ويستهلك تكلفة، فلا بد أن يكون يدوياً)
     }
 
     private fun triggerManualScan() {
-        Toast.makeText(this, R.string.scan_started, Toast.LENGTH_SHORT).show()
         com.azzam.receiptscanner.storage.ProcessedFilesTracker.resetAll(this)
         runImmediateScan(isAuto = false)
     }

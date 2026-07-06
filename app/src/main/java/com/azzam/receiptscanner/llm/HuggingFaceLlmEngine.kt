@@ -27,6 +27,8 @@ class HuggingFaceLlmEngine : LlmEngine {
         .readTimeout(60, TimeUnit.SECONDS)
         .build()
 
+    override suspend fun extractFromFile(file: File, apiKey: String): LlmExtractionResult? = null
+
     override suspend fun extract(ocrText: String, apiKey: String): LlmExtractionResult? =
         withContext(Dispatchers.IO) {
             if (apiKey.isBlank() || ocrText.isBlank()) return@withContext null

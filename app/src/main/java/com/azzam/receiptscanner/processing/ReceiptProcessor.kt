@@ -1,19 +1,10 @@
 package com.azzam.receiptscanner.processing
 
 import android.content.Context
-import android.graphics.Bitmap
-import com.azzam.receiptscanner.llm.ExtractionHints
 import com.azzam.receiptscanner.llm.LlmManager
 import com.azzam.receiptscanner.model.Transfer
-import com.azzam.receiptscanner.ocr.ImageCompressor
-import com.azzam.receiptscanner.ocr.ImagePreprocessor
-import com.azzam.receiptscanner.ocr.MlKitOcrHelper
-import com.azzam.receiptscanner.ocr.PdfHelper
 import com.azzam.receiptscanner.parser.BankMatcher
 import com.azzam.receiptscanner.parser.DataSanitizer
-import com.azzam.receiptscanner.parser.FieldExtractors
-import com.azzam.receiptscanner.parser.ParsedFields
-import com.azzam.receiptscanner.parser.ParserRegistry
 import com.azzam.receiptscanner.storage.ApiKeyStore
 import com.azzam.receiptscanner.storage.ProcessedFilesTracker
 import com.azzam.receiptscanner.storage.TransferRepository
@@ -21,13 +12,15 @@ import java.io.File
 import java.util.UUID
 
 /**
- * خط المعالجة الكامل لملف واحد.
+ * خط المعالجة الكامل — API فقط بدون OCR محلي.
  *
- * تحسين: تسجيل تشخيصي كامل لكل ملف لمعرفة سبب الرفض/القبول.
+ * إصلاح جوهري: أزلنا ML Kit OCR و ImagePreprocessor تماماً.
+ * الملف (صورة/PDF) يُرسل مباشرة للـ LLM عبر Vision API.
+ * هذا أسرع بكثير ويدعم العربية بدقة عالية.
+ *
+ * المتطلبات: مفتاح API مُعد في الإعدادات (Claude أو Gemini).
  */
 object ReceiptProcessor {
-
-    private val registry = ParserRegistry()
 
     suspend fun processFile(context: Context, file: File): Boolean {
         DiagnosticLogger.logFileProcessed()
@@ -43,75 +36,41 @@ object ReceiptProcessor {
             return false
         }
         if (!FileFilter.isCandidateReceipt(file)) {
-            val size = file.length()
-            val ext = file.extension
-            DiagnosticLogger.logRejection("ليس صورة/PDF أو حجم غير مناسب ($ext, ${size/1024}KB)")
+            DiagnosticLogger.logRejection("ليس صورة/PDF أو حجم غير مناسب")
             return false
         }
 
         ProcessedFilesTracker.markProcessed(context, key)
 
-        val filenameHint = FileFilter.filenameHint(file)
-        if (filenameHint == false) {
-            DiagnosticLogger.logRejection("اسم الملف يدل على غير إيصال (${file.name})")
+        // ★ تحقق من وجود مفتاح API
+        val activeEngineId = ApiKeyStore.getActiveEngine(context)
+        val engine = LlmManager.getEngine(activeEngineId)
+        val apiKey = ApiKeyStore.getApiKey(context, activeEngineId)
+
+        if (engine == null || apiKey.isNullOrBlank()) {
+            DiagnosticLogger.logRejection("لا يوجد مفتاح API — اذهب للإعدادات")
             return false
         }
 
-        val ocrText = try {
-            extractText(file)
+        // ★ أرسل الملف مباشرة للـ API (بدون OCR محلي)
+        val result = try {
+            engine.extractFromFile(file, apiKey)
         } catch (e: Exception) {
-            DiagnosticLogger.logRejection("فشل OCR: ${e.message?.take(50)}")
-            ""
+            DiagnosticLogger.logRejection("فشل API: ${e.message?.take(50)}")
+            null
         }
 
-        if (filenameHint != true) {
-            if (ocrText.isBlank()) {
-                DiagnosticLogger.logRejection("نص OCR فارغ")
-                return false
-            }
-            if (!FileFilter.looksLikeReceipt(ocrText)) {
-                DiagnosticLogger.logRejection("لا يحوي كلمات إيصال (${file.name.take(30)})")
-                return false
-            }
+        if (result == null) {
+            DiagnosticLogger.logRejection("API أعاد null")
+            return false
         }
 
-        // ===== المرحلة الأولى: Regex محلي صارم =====
-        var bankId = "unknown"
-        var fields: ParsedFields? = null
-        if (ocrText.isNotBlank()) {
-            val extraction = registry.extract(ocrText)
-            bankId = extraction?.first ?: "unknown"
-            fields = extraction?.second
-        }
-
-        // ===== بناء Hints =====
-        val hints = ExtractionHints(
-            amount = fields?.amount,
-            date = fields?.date,
-            iban = extractIban(ocrText)
-        )
-
-        // ===== المرحلة الثانية: LLM مع hints =====
-        val needsLlmHelp = fields?.amount == null ||
-            (fields.recipientName.isNullOrBlank() && fields.senderName.isNullOrBlank())
-
-        var usedLlm = false
-        var llmEngineUsed: String? = null
-        if (needsLlmHelp && ocrText.isNotBlank()) {
-            val llmFields = tryLlmExtractionWithHints(context, ocrText, hints)
-            if (llmFields != null) {
-                fields = mergeFields(fields, llmFields)
-                if (bankId == "unknown") bankId = "llm_${llmFields.engineId}"
-                usedLlm = true
-                llmEngineUsed = llmFields.engineId
-            }
-        }
-
-        // ===== عتبة الحفظ =====
-        val amountValue = fields?.amount
+        // ★ تنظيف البيانات
+        val sanitized = DataSanitizer.sanitize(result)
+        val amountValue = sanitized.amount
         val hasValidAmount = amountValue != null && amountValue >= 1.0
-        val hasValidDate = fields?.date != null
-        val hasName = !fields?.senderName.isNullOrBlank() || !fields?.recipientName.isNullOrBlank()
+        val hasValidDate = sanitized.date != null
+        val hasName = !sanitized.senderName.isNullOrBlank() || !sanitized.recipientName.isNullOrBlank()
 
         val shouldSave = when {
             hasValidAmount -> true
@@ -127,91 +86,28 @@ object ReceiptProcessor {
             return false
         }
 
-        // ★ تصحيح bankId عبر Fuzzy Matching
-        bankId = BankMatcher.normalizeBankId(bankId)
+        // ★ تصحيح bankId
+        var bankId = BankMatcher.normalizeBankId("unknown")
+        // حاول استخراج البنك من اسم الملف أو المحتوى
+        bankId = BankMatcher.normalizeBankId(file.name) ?: bankId
 
         val transfer = Transfer(
             id = UUID.randomUUID().toString(),
-            senderName = fields?.senderName,
-            recipientName = fields?.recipientName,
-            amount = fields?.amount,
-            date = fields?.date,
+            senderName = sanitized.senderName,
+            recipientName = sanitized.recipientName,
+            amount = sanitized.amount,
+            date = sanitized.date,
             bankId = bankId,
-            confidence = when {
-                hasValidAmount && usedLlm && hasName -> 0.9f
-                hasValidAmount && hasName -> 0.75f
-                hasValidAmount -> 0.5f
-                hasValidDate && hasName -> 0.4f
-                else -> 0.2f
-            },
+            confidence = 0.95f, // API extraction = high confidence
             sourceFileName = file.name,
             processedAt = System.currentTimeMillis(),
-            rawText = ocrText.take(500),
-            llmEngineUsed = llmEngineUsed,
+            rawText = "",
+            llmEngineUsed = result.engineId,
             originalFilePath = file.absolutePath
         )
 
         TransferRepository.addTransfer(context, transfer)
         DiagnosticLogger.logFileSaved()
         return true
-    }
-
-    private suspend fun tryLlmExtractionWithHints(
-        context: Context,
-        ocrText: String,
-        hints: ExtractionHints
-    ): com.azzam.receiptscanner.llm.LlmExtractionResult? {
-        val activeEngineId = ApiKeyStore.getActiveEngine(context)
-        val engine = LlmManager.getEngine(activeEngineId) ?: return null
-        val apiKey = ApiKeyStore.getApiKey(context, activeEngineId) ?: return null
-        return engine.extractWithHints(ocrText, apiKey, hints)
-    }
-
-    private fun mergeFields(
-        original: ParsedFields?,
-        llm: com.azzam.receiptscanner.llm.LlmExtractionResult
-    ): ParsedFields {
-        val sanitized = DataSanitizer.sanitize(llm)
-        return ParsedFields(
-            senderName = original?.senderName?.takeIf { it.isNotBlank() } ?: sanitized.senderName,
-            recipientName = original?.recipientName?.takeIf { it.isNotBlank() } ?: sanitized.recipientName,
-            amount = original?.amount ?: sanitized.amount,
-            date = original?.date?.takeIf { it.isNotBlank() } ?: sanitized.date
-        )
-    }
-
-    private fun extractIban(text: String): String? {
-        Regex("""SA\d{2}\s?\d{2}\s?\d{18}""").find(text)?.let { return it.value.replace(" ", "") }
-        Regex("""SA\*+\s*\*+\s*\*+\s*\*+\s*\*+\s*\d+""").find(text)?.let { return it.value }
-        return null
-    }
-
-    private suspend fun extractText(file: File): String {
-        return if (FileFilter.isPdf(file)) {
-            val pages = PdfHelper.renderPages(file)
-            try {
-                val texts = mutableListOf<String>()
-                for (page in pages) {
-                    try {
-                        val processed = ImagePreprocessor.preprocessBitmap(page)
-                        texts.add(MlKitOcrHelper.recognize(processed))
-                        processed.recycle()
-                    } finally {
-                        page.recycle()
-                    }
-                }
-                texts.joinToString("\n")
-            } catch (e: Exception) {
-                pages.forEach { if (!it.isRecycled) it.recycle() }
-                throw e
-            }
-        } else {
-            val bitmap = ImagePreprocessor.preprocess(file) ?: return ""
-            try {
-                MlKitOcrHelper.recognize(bitmap)
-            } finally {
-                if (!bitmap.isRecycled) bitmap.recycle()
-            }
-        }
     }
 }

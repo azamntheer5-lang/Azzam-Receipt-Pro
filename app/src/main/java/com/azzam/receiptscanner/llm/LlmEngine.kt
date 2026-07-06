@@ -1,31 +1,33 @@
 package com.azzam.receiptscanner.llm
 
+import java.io.File
+
 /**
  * واجهة موحّدة لجميع محركات الذكاء الاصطناعي.
  *
- * تطبيق نمط Strategy مع دعم Hints (المرحلة الثانية الهجينة).
+ * التحديث: إزالة الاعتماد على OCR محلي تماماً. المحرك يستقبل الملف
+ * مباشرة (صورة/PDF) ويستخرج البيانات كاملة عبر Vision API.
  */
 interface LlmEngine {
     val engineId: String
     val displayName: String
 
     /**
-     * يستخرج بيانات الحوالة من نص OCR (مع retry تلقائي داخلي).
+     * يستخرج بيانات الحوالة من ملف (صورة/PDF) مباشرة عبر Vision API.
+     * لا حاجة لـ OCR محلي — المحرك يقرأ الصورة بنفسه.
      *
-     * @param ocrText نص الـ OCR الخام
+     * @param file ملف الصورة أو PDF
      * @param apiKey مفتاح الـ API
-     * @return [LlmExtractionResult] أو null عند الفشل التام
+     * @return [LlmExtractionResult] أو null عند الفشل
      */
-    suspend fun extract(ocrText: String, apiKey: String): LlmExtractionResult?
+    suspend fun extractFromFile(file: File, apiKey: String): LlmExtractionResult?
 
-    /**
-     * يستخرج بيانات الحوالة مع تضمين hints من Regex.
-     * التنفيذ الافتراضي: يتجاهل hints ويستدعي extract العادية.
-     * المحركات يمكنها override لتستفيد من hints.
-     */
+    /** طريقة قديمة للتوافق الخلفي — تستخدم extractFromFile. */
+    suspend fun extract(ocrText: String, apiKey: String): LlmExtractionResult? = null
+
     suspend fun extractWithHints(
         ocrText: String,
         apiKey: String,
         hints: ExtractionHints?
-    ): LlmExtractionResult? = extract(ocrText, apiKey)
+    ): LlmExtractionResult? = null
 }
