@@ -57,7 +57,8 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
         if (foundPaths == 0) {
             notifyUser(applicationContext, "❌ لم نجد أي مجلدات. اذهب للقائمة → 📁 فحص مجلد كامل واختر مجلد الصور يدوياً.")
         } else {
-            com.azzam.receiptscanner.processing.DiagnosticLogger.showReport(applicationContext)
+            val report = com.azzam.receiptscanner.processing.DiagnosticLogger.buildReport()
+            notifyUser(applicationContext, report)
         }
 
         return Result.success()
