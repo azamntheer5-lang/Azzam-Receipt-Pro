@@ -9,8 +9,8 @@ class RajhiParser : BankReceiptParser {
 
     override fun matches(text: String): Boolean {
         // تطابق مرن عبر BankMatcher (يدعم أخطاء OCR)
-        return BankMatcher.match(text) != null &&
-            BankMatcher.match(text)!!.first.startsWith("al_rajhi") ||
+        val matched = BankMatcher.match(text)
+        return (matched != null && matched.first.startsWith("al_rajhi")) ||
             text.contains("الراجحي") || text.contains("Rajhi", ignoreCase = true)
     }
 
