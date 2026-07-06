@@ -21,14 +21,21 @@ class ReceiptWatcherService : Service() {
         const val CHANNEL_ID = "receipt_watcher_channel"
         const val NOTIFICATION_ID = 1001
 
-        // المسارات الشائعة لواتساب العادي والبزنس. قد تختلف قليلاً حسب
-        // الجهاز/الإصدار - إن لم تُكتشف إيصالاتك، تحقق من المسار الفعلي
-        // عبر مدير ملفات وعدّل هذه القائمة.
+        // المسارات الشائعة لواتساب العادي والأعمال. قد تختلف قليلاً حسب
+        // الجهاز/الإصدار - إن لم تُكتشف إيصالاتك، استخدم "فحص مجلد كامل"
+        // من القائمة واختر مجلد الصور مباشرة.
         val WHATSAPP_PATHS = listOf(
+            // واتساب العادي
             "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images",
             "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Documents",
+            // واتساب الأعمال (WhatsApp Business)
             "/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Business Images",
-            "/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Business Documents"
+            "/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Business Documents",
+            // مسارات بديلة لواتساب الأعمال (تختلف حسب الجهاز)
+            "/storage/emulated/0/WhatsApp Business/Media/WhatsApp Business Images",
+            "/storage/emulated/0/WhatsApp Business/Media/WhatsApp Business Documents",
+            "/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WA Business Images",
+            "/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WA Business Documents"
         )
     }
 

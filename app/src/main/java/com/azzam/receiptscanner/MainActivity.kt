@@ -121,10 +121,26 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
         if (uri != null) {
-            // احتفظ بصلاحية الوصول الدائم
-            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            contentResolver.takePersistableUriPermission(uri, flags)
-            startBatchScan(uri)
+            try {
+                // ★ احتفظ بصلاحية الوصول الدائمة (حاسم لـ Scoped Storage)
+                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(uri, flags)
+                startBatchScan(uri)
+            } catch (e: SecurityException) {
+                // النظام رفض منح الصلاحية الدائمة
+                Toast.makeText(
+                    this,
+                    getString(R.string.batch_permission_denied),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        } else {
+            // المستخدم ألغى الاختيار
+            Toast.makeText(
+                this,
+                getString(R.string.batch_no_folder_selected),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

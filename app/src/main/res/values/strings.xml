@@ -14,6 +14,10 @@
     <string name="menu_statements">🧾 كشف الحسابات</string>
     <string name="menu_batch_scan">📁 فحص مجلد كامل</string>
     <string name="batch_scan_started">جارٍ فحص المجلد في الخلفية… قد يستغرق عدة دقائق</string>
+    <string name="batch_no_files">لم يتم العثور على ملفات صور/PDF في المجلد المختار. تأكد من اختيار مجلد الصور من المعرض مباشرةً، النظام قد يمنع الوصول للمجلد الرئيسي.</string>
+    <string name="batch_scoped_storage_error">يرجى اختيار مجلد الصور من المعرض مباشرةً، النظام يمنع الوصول للمجلد الرئيسي.</string>
+    <string name="batch_permission_denied">تعذّر الحصول على صلاحية دائمة للمجلد. حاول مرة أخرى واختر مجلد صور محدّد.</string>
+    <string name="batch_no_folder_selected">لم يتم اختيار أي مجلد.</string>
     <string name="menu_analytics">📊 تحليلات ورسوم بيانية</string>
     <string name="menu_export_csv">📄 تصدير Excel (CSV)</string>
     <string name="menu_export_pdf">📑 تصدير تقرير PDF</string>

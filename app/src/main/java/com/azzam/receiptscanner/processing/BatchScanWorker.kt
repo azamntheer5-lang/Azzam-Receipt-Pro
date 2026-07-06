@@ -3,6 +3,8 @@ package com.azzam.receiptscanner.processing
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.widget.Toast
+import androidx.documentfile.provider.DocumentFile
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
@@ -13,11 +15,11 @@ import java.io.FileOutputStream
 /**
  * معالج الدفعات (Batch Processing) — يمر على كل ملفات مجلد كامل.
  *
- * يستخدم Storage Access Framework (SAF) tree URI لاختيار مجلد.
- * يعمل في الخلفية عبر WorkManager، يعالج كل ملفات المجلد دفعة واحدة:
- *   قراءة ← فلترة ← OCR ← استخراج ← حفظ في Room DB
- *
- * صامت: لا نوافذ تأكيد لكل ملف. يُعلن التقدم عبر إشعار.
+ * إصلاح جوهري:
+ *  - دعم واتساب الأعمال (WhatsApp Business) عبر DocumentFile
+ *  - فحص عميق (Recursive Traversal) للمجلدات الفرعية
+ *  - معالجة استثناءات Scoped Storage مع رسائل واضحة للمستخدم
+ *  - تنظيف الملفات المؤقتة بعد كل ملف
  */
 class BatchScanWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
@@ -28,8 +30,17 @@ class BatchScanWorker(context: Context, params: WorkerParameters) :
 
         try {
             val context = applicationContext
-            val files = collectFilesFromTree(context, treeUri)
+            val files = collectFilesRecursive(context, treeUri)
             val total = files.size
+
+            // إن لم نجد ملفات، أبلغ المستخدم باحتمال قيود Scoped Storage
+            if (files.isEmpty()) {
+                notifyUser(context, context.getString(com.azzam.receiptscanner.R.string.batch_no_files))
+                return@withContext Result.success(
+                    androidx.work.workDataOf(KEY_PROCESSED to 0, KEY_SAVED to 0, KEY_TOTAL to 0)
+                )
+            }
+
             var processed = 0
             var saved = 0
 
@@ -41,10 +52,9 @@ class BatchScanWorker(context: Context, params: WorkerParameters) :
                 } catch (e: Exception) {
                     // تجاهل الملفات المعطوبة، تابع
                 } finally {
-                    // ★ تخلّص من الملف المؤقت دائماً (تفادي امتلاء cache)
+                    // ★ تخلّص من الملف المؤقت دائماً
                     try { file.delete() } catch (_: Exception) {}
                 }
-                // إشعار التقدم كل 10 ملفات
                 if (processed % 10 == 0 || processed == total) {
                     setProgressAsync(
                         androidx.work.workDataOf(
@@ -56,7 +66,7 @@ class BatchScanWorker(context: Context, params: WorkerParameters) :
                 }
             }
 
-            // تنظيف المجلد المؤقت بالكامل بعد الانتهاء
+            // تنظيف المجلد المؤقت
             try {
                 File(context.cacheDir, "batch_scan").deleteRecursively()
             } catch (_: Exception) {}
@@ -68,57 +78,105 @@ class BatchScanWorker(context: Context, params: WorkerParameters) :
                     KEY_TOTAL to total
                 )
             )
+        } catch (e: SecurityException) {
+            // قيود Scoped Storage — أبلغ المستخدم
+            notifyUser(
+                applicationContext,
+                applicationContext.getString(com.azzam.receiptscanner.R.string.batch_scoped_storage_error)
+            )
+            Result.failure()
         } catch (e: Exception) {
             Result.failure()
         }
     }
 
     /**
-     * يجمع كل الملفات المرشّحة من شجرة SAF.
-     * يحوّل كل URI إلى File مؤقت (نسخ) ليمرّ عبر ReceiptProcessor.
+     * ★ فحص عميق (Recursive) عبر DocumentFile — يغوص في كل المجلدات الفرعية.
+     *
+     * يستخدم DocumentFile.fromTreeUri + listFiles() بشكل تكراري للعثور على
+     * كل الصور وملفات PDF في الشجرة كاملةً، وليس فقط السطح.
+     *
+     * هذا ضروري لأن المستخدم قد يختار المجلد الجذري لواتساب الأعمال،
+     * والصور تكون في مجلدات فرعية عميقة (Media/WhatsApp Business Images/...).
      */
-    private fun collectFilesFromTree(context: Context, treeUri: Uri): List<File> {
+    private fun collectFilesRecursive(context: Context, treeUri: Uri): List<File> {
         val files = mutableListOf<File>()
-        val contentResolver = context.contentResolver
+        val tempDir = File(context.cacheDir, "batch_scan").apply { mkdirs() }
 
-        val children = DocumentsContract.buildChildDocumentsUriUsingTree(
-            treeUri,
-            DocumentsContract.getTreeDocumentId(treeUri)
-        )
-
-        contentResolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID), null, null, null)
-            ?.use { cursor ->
-                val tempDir = File(context.cacheDir, "batch_scan").apply { mkdirs() }
-                while (cursor.moveToNext()) {
-                    val docId = cursor.getString(0)
-                    val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
-                    val name = docId.substringAfterLast("/")
-                    val ext = name.substringAfterLast(".", "").lowercase()
-
-                    // فلتر النوع
-                    if (ext !in listOf("pdf", "jpg", "jpeg", "png", "webp")) continue
-
-                    // انسخ الملف إلى cache (ReceiptProcessor يعمل مع File)
-                    val tempFile = File(tempDir, "batch_${System.currentTimeMillis()}_$name")
-                    try {
-                        contentResolver.openInputStream(docUri)?.use { input ->
-                            FileOutputStream(tempFile).use { output ->
-                                input.copyTo(output)
-                            }
-                        }
-                        // فلتر الحجم
-                        if (tempFile.length() in 1..(5L * 1024 * 1024)) {
-                            files.add(tempFile)
-                        } else {
-                            tempFile.delete()
-                        }
-                    } catch (e: Exception) {
-                        tempFile.delete()
-                    }
-                }
-            }
+        try {
+            val root = DocumentFile.fromTreeUri(context, treeUri) ?: return emptyList()
+            traverseRecursive(context, root, files, tempDir, depth = 0)
+        } catch (e: SecurityException) {
+            // لا صلاحية للوصول — أعد قائمة فارغة (سيتعامل doWork معها)
+            return emptyList()
+        } catch (e: Exception) {
+            return emptyList()
+        }
 
         return files
+    }
+
+    /**
+     * دالة تكرارية (recursive) تمرّ على كل الملفات والمجلدات الفرعية.
+     * حد أقصى للعمق = 10 لتجنب التكرار اللانهائي.
+     */
+    private fun traverseRecursive(
+        context: Context,
+        dir: DocumentFile,
+        files: MutableList<File>,
+        tempDir: File,
+        depth: Int
+    ) {
+        if (depth > 10) return // حد أمان للعمق
+
+        val children = try {
+            dir.listFiles()
+        } catch (e: SecurityException) {
+            return // لا صلاحية لهذا المجلد — تخطّاه
+        } catch (e: Exception) {
+            return
+        }
+
+        for (child in children) {
+            if (child.isDirectory) {
+                // غص في المجلد الفرعي
+                traverseRecursive(context, child, files, tempDir, depth + 1)
+            } else if (child.isFile) {
+                // فلتر النوع
+                val name = child.name ?: continue
+                val ext = name.substringAfterLast(".", "").lowercase()
+                if (ext !in listOf("pdf", "jpg", "jpeg", "png", "webp")) continue
+
+                // انسخ الملف إلى cache (ReceiptProcessor يعمل مع File)
+                val tempFile = File(tempDir, "batch_${System.currentTimeMillis()}_$name")
+                try {
+                    context.contentResolver.openInputStream(child.uri)?.use { input ->
+                        FileOutputStream(tempFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    // فلتر الحجم
+                    if (tempFile.length() in 1..(5L * 1024 * 1024)) {
+                        files.add(tempFile)
+                    } else {
+                        tempFile.delete()
+                    }
+                } catch (e: SecurityException) {
+                    tempFile.delete()
+                    // تخطّى هذا الملف — لا صلاحية
+                } catch (e: Exception) {
+                    tempFile.delete()
+                }
+            }
+        }
+    }
+
+    /** يعرض Toast للمستخدم (يتم تنفيذه على الـ Main thread). */
+    private fun notifyUser(context: Context, message: String) {
+        val mainHandler = android.os.Handler(context.mainLooper)
+        mainHandler.post {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
     }
 
     companion object {

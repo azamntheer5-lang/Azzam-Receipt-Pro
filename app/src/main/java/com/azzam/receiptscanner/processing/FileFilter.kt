@@ -27,6 +27,25 @@ object FileFilter {
         "stcpay", "stc-pay", "bank-transfer", "payment-receipt"
     )
 
+    /**
+     * أنماط مسارات واتساب المدعومة (عادي + أعمال).
+     * تستخدم للتحقق من المسار في ReceiptWatcherService وللتلميحات.
+     */
+    val WHATSAPP_PATH_PATTERNS = listOf(
+        // واتساب العادي
+        "WhatsApp Images", "WhatsApp Documents",
+        "com.whatsapp",
+        // واتساب الأعمال
+        "WhatsApp Business Images", "WhatsApp Business Documents",
+        "com.whatsapp.w4b", "WA-biz", "WhatsApp Business"
+    )
+
+    /** يتحقق إن كان المسار ينتمي لمجلدات واتساب (عادي/أعمال). */
+    fun isWhatsAppPath(path: String): Boolean {
+        val lower = path.lowercase()
+        return WHATSAPP_PATH_PATTERNS.any { it.lowercase() in lower }
+    }
+
     /** كلمات في اسم الملف تشير لملف غير إيصال (سلبية). */
     private val nonReceiptFilenameKeywords = listOf(
         "cv", "resume", "lab", "exam", "assignment", "homework", "worksheet",
