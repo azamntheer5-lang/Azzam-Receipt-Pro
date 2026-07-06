@@ -6,6 +6,10 @@
     <string name="scan_now">مسح الآن</string>
     <string name="auto_scan_started">جارٍ الفحص التلقائي للإيصالات… ستحظر النتائج خلال لحظات</string>
     <string name="scan_complete_count">تم فحص %1$d ملف. النتائج تظهر في القائمة.</string>
+    <string name="scan_success_with_results">✅ تم فحص %1$d ملف، استخرجنا %2$d إيصال. تظهر في القائمة.</string>
+    <string name="scan_no_receipts">تم فحص %1$d ملف لكن لم نجد إيصالات حوالة. تأكد من وجود صور إيصالات في المجلدات.</string>
+    <string name="scan_no_paths">❌ لم نجد أي مجلدات صور. اختر مجلداً يدوياً من القائمة: فحص مجلد كامل.</string>
+    <string name="scan_paths_found_no_files">وجدنا %1$d مجلد لكن لا توجد ملفات صور/PDF بداخلها. اختر مجلداً يدوياً.</string>
     <string name="total_label">إجمالي التحويلات</string>
     <string name="watcher_notification_title">مراقبة إيصالات واتساب نشطة</string>
     <string name="watcher_notification_desc">يتم فحص الملفات الجديدة تلقائياً في الخلفية</string>

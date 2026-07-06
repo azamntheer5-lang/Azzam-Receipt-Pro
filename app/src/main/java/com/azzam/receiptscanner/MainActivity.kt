@@ -343,7 +343,11 @@ class MainActivity : AppCompatActivity() {
         val serviceIntent = Intent(this, ReceiptWatcherService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
         PeriodicScanWorker.schedule(this)
-        // ★ فحص فوري تلقائي عند بدء التطبيق — يضمن أن الإيصالات تظهر فوراً
+
+        // ★ أعد ضبط الملفات المعالَجة للتأكد من إعادة الفحص بعد تحديث التطبيق
+        com.azzam.receiptscanner.storage.ProcessedFilesTracker.resetAll(this)
+
+        // ★ فحص فوري تلقائي عند بدء التطبيق
         PeriodicScanWorker.triggerImmediateScan(this)
         Toast.makeText(this, R.string.auto_scan_started, Toast.LENGTH_LONG).show()
     }

@@ -1,6 +1,7 @@
 package com.azzam.receiptscanner
 
 import android.content.Context
+import android.widget.Toast
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -14,11 +15,11 @@ import java.util.concurrent.TimeUnit
 /**
  * خط الدفاع الثاني: مسح دوري + فوري عند الطلب.
  *
- * إصلاح جوهري:
- *  - فحص عميق (Recursive) لكل المسارات الفرعية
- *  - مسارات إضافية: Pictures, Download, DCIM, ومجلدات واتساب الأعمال البديلة
+ * إصلاح شامل:
+ *  - فحص عميق (Recursive) لكل المسارات الفرعية (عمق 5)
+ *  - مسارات إضافية: Pictures, Download, DCIM, Documents, WhatsApp Business
  *  - معالجة استثناءات الوصول (يستمر عند فشل مسار محمي)
- *  - كل استدعاء لـ ReceiptProcessor.processFile آمن (idempotent)
+ *  - ★ تشخيص واضح: يُظهر للمستخدم المسارات المكتشفة + عدد الملفات
  */
 class PeriodicScanWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
@@ -27,22 +28,26 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
         // اجمع كل المسارات المرشّحة
         val allPaths = mutableListOf<String>().apply {
             addAll(ReceiptWatcherService.WHATSAPP_PATHS)
-            // مسارات إضافية شائعة للصور/المستندات
             add("/storage/emulated/0/Pictures")
             add("/storage/emulated/0/Download")
             add("/storage/emulated/0/DCIM")
             add("/storage/emulated/0/Documents")
-            // مسارات بديلة لواتساب الأعمال
             add("/storage/emulated/0/WhatsApp Business/Media")
             add("/storage/emulated/0/WhatsApp/Media")
         }.distinct()
 
         var scannedCount = 0
+        var savedCount = 0
+        val foundPaths = mutableListOf<String>()
+
         for (path in allPaths) {
             val dir = File(path)
             if (!dir.exists() || !dir.isDirectory) continue
+            foundPaths.add(path)
             try {
-                scannedCount += scanRecursive(dir, depth = 5)
+                val result = scanRecursive(dir, depth = 5)
+                scannedCount += result.first
+                savedCount += result.second
             } catch (e: SecurityException) {
                 continue
             } catch (e: Exception) {
@@ -50,10 +55,20 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
             }
         }
 
-        // ★ أبلغ المستخدم بالنتيجة
-        if (scannedCount > 0) {
-            notifyUser(applicationContext, applicationContext.getString(com.azzam.receiptscanner.R.string.scan_complete_count, scannedCount))
+        // ★ تشخيص واضح للمستخدم
+        val message = when {
+            savedCount > 0 -> applicationContext.getString(
+                R.string.scan_success_with_results, scannedCount, savedCount
+            )
+            scannedCount > 0 -> applicationContext.getString(
+                R.string.scan_no_receipts, scannedCount
+            )
+            foundPaths.isEmpty() -> applicationContext.getString(R.string.scan_no_paths)
+            else -> applicationContext.getString(
+                R.string.scan_paths_found_no_files, foundPaths.size
+            )
         }
+        notifyUser(applicationContext, message)
 
         return Result.success()
     }
@@ -62,48 +77,49 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
     private fun notifyUser(context: Context, message: String) {
         val mainHandler = android.os.Handler(context.mainLooper)
         mainHandler.post {
-            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
 
     /**
      * فحص عميق (Recursive) للمجلدات الفرعية.
-     * @return عدد الملفات المعالَجة
+     * @return Pair(scannedCount, savedCount)
      */
-    private suspend fun scanRecursive(dir: File, depth: Int, currentDepth: Int = 0): Int {
-        if (currentDepth > depth) return 0
-        if (!dir.exists() || !dir.isDirectory) return 0
+    private suspend fun scanRecursive(dir: File, depth: Int, currentDepth: Int = 0): Pair<Int, Int> {
+        if (currentDepth > depth) return 0 to 0
+        if (!dir.exists() || !dir.isDirectory) return 0 to 0
 
-        var count = 0
+        var scanned = 0
+        var saved = 0
         val children = try {
-            dir.listFiles() ?: return 0
+            dir.listFiles() ?: return 0 to 0
         } catch (e: SecurityException) {
-            return 0
+            return 0 to 0
         } catch (e: Exception) {
-            return 0
+            return 0 to 0
         }
 
         for (child in children) {
             try {
                 if (child.isDirectory) {
-                    // غص في المجلد الفرعي
-                    count += scanRecursive(child, depth, currentDepth + 1)
+                    val (s, sv) = scanRecursive(child, depth, currentDepth + 1)
+                    scanned += s
+                    saved += sv
                 } else if (child.isFile) {
-                    // عالج الملف (آمن إن كان معالَجاً مسبقاً)
-                    ReceiptProcessor.processFile(applicationContext, child)
-                    count++
+                    val wasSaved = ReceiptProcessor.processFile(applicationContext, child)
+                    scanned++
+                    if (wasSaved) saved++
                 }
             } catch (e: Exception) {
                 // تجاهل الأخطاء الفردية، تابع
             }
         }
-        return count
+        return scanned to saved
     }
 
     companion object {
         private const val WORK_NAME = "receipt_backstop_scan"
 
-        /** يجدول الفحص الدوري كل 15 دقيقة. */
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<PeriodicScanWorker>(15, TimeUnit.MINUTES).build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -111,7 +127,6 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
             )
         }
 
-        /** ★ يطلق فحصاً فورياً (OneTime) — يُستدعى عند بدء التطبيق. */
         fun triggerImmediateScan(context: Context) {
             val request = OneTimeWorkRequestBuilder<PeriodicScanWorker>().build()
             WorkManager.getInstance(context).enqueue(request)
