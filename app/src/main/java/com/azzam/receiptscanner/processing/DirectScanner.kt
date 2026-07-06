@@ -18,7 +18,6 @@ object DirectScanner {
      */
     suspend fun scanNow(context: Context): ScanResult {
         var scanned = 0
-        var saved = 0
         var foundFolders = 0
         val errors = mutableListOf<String>()
 
@@ -37,9 +36,7 @@ object DirectScanner {
             if (!dir.exists() || !dir.isDirectory) continue
             foundFolders++
             try {
-                val (s, sv) = scanRecursive(context, dir, depth = 5)
-                scanned += s
-                saved += sv
+                scanned += scanRecursive(context, dir, depth = 5)
             } catch (e: SecurityException) {
                 errors.add("لا صلاحية: $path")
             } catch (e: Exception) {
@@ -47,39 +44,35 @@ object DirectScanner {
             }
         }
 
-        return ScanResult(scanned, saved, foundFolders, errors)
+        return ScanResult(scanned, 0, foundFolders, errors)
     }
 
     private suspend fun scanRecursive(
         context: Context, dir: File, depth: Int, currentDepth: Int = 0
-    ): Pair<Int, Int> {
-        if (currentDepth > depth) return 0 to 0
-        if (!dir.exists() || !dir.isDirectory) return 0 to 0
+    ): Int {
+        if (currentDepth > depth) return 0
+        if (!dir.exists() || !dir.isDirectory) return 0
 
         val children = try {
-            dir.listFiles() ?: return 0 to 0
+            dir.listFiles() ?: return 0
         } catch (e: Exception) {
-            return 0 to 0
+            return 0
         }
 
         var scanned = 0
-        var saved = 0
         for (child in children) {
             try {
                 if (child.isDirectory) {
-                    val (s, sv) = scanRecursive(context, child, depth, currentDepth + 1)
-                    scanned += s
-                    saved += sv
+                    scanned += scanRecursive(context, child, depth, currentDepth + 1)
                 } else if (child.isFile) {
-                    val wasSaved = ReceiptProcessor.processFile(context, child)
+                    ReceiptProcessor.processFile(context, child)
                     scanned++
-                    if (wasSaved) saved++
                 }
             } catch (e: Exception) {
                 // تجاهل الأخطاء الفردية
             }
         }
-        return scanned to saved
+        return scanned
     }
 
     data class ScanResult(
