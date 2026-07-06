@@ -347,21 +347,43 @@ class MainActivity : AppCompatActivity() {
         ContextCompat.startForegroundService(this, serviceIntent)
         PeriodicScanWorker.schedule(this)
 
-        // ★ أعد ضبط الملفات المعالَجة للتأكد من إعادة الفحص بعد تحديث التطبيق
+        // ★ أعد ضبط الملفات المعالَجة
         com.azzam.receiptscanner.storage.ProcessedFilesTracker.resetAll(this)
 
-        // ★ فحص فوري تلقائي عند بدء التطبيق
-        PeriodicScanWorker.triggerImmediateScan(this)
-        Toast.makeText(this, R.string.auto_scan_started, Toast.LENGTH_LONG).show()
+        // ★ فحص فوري تلقائي في lifecycleScope (ليس WorkManager)
+        runImmediateScan(isAuto = true)
     }
 
     private fun triggerManualScan() {
-        // ★ تأكيد فوري للمستخدم أن الزر يعمل
         Toast.makeText(this, R.string.scan_started, Toast.LENGTH_SHORT).show()
-        // ★ أعد ضبط الملفات المعالَجة قبل الفحص اليدوي أيضاً
         com.azzam.receiptscanner.storage.ProcessedFilesTracker.resetAll(this)
-        // ★ فحص فوري عميق
-        PeriodicScanWorker.triggerImmediateScan(this)
+        runImmediateScan(isAuto = false)
+    }
+
+    /**
+     * ★ فحص فوري في lifecycleScope — يضمن ظهور النتائج والتقرير.
+     */
+    private fun runImmediateScan(isAuto: Boolean) {
+        if (isAuto) {
+            Toast.makeText(this, R.string.auto_scan_started, Toast.LENGTH_LONG).show()
+        }
+        lifecycleScope.launch {
+            val report = withContext(Dispatchers.IO) {
+                com.azzam.receiptscanner.processing.ImmediateScanner.scanNow(this@MainActivity)
+            }
+            // ★ اعرض التقرير في AlertDialog (موثوق أكثر من Toast)
+            showScanReport(report, isAuto)
+        }
+    }
+
+    /** يعرض تقرير الفحص في AlertDialog. */
+    private fun showScanReport(report: String, isAuto: Boolean) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(if (isAuto) "نتيجة الفحص التلقائي" else "نتيجة الفحص اليدوي")
+            .setMessage(report)
+            .setPositiveButton(R.string.confirm, null)
+            .setCancelable(false)
+            .show()
     }
 
     /** يبدأ المعالجة بالجملة لمجلد كامل عبر BatchScanWorker. */
