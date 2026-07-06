@@ -40,6 +40,9 @@ class BatchScanWorker(context: Context, params: WorkerParameters) :
                     if (wasSaved) saved++
                 } catch (e: Exception) {
                     // تجاهل الملفات المعطوبة، تابع
+                } finally {
+                    // ★ تخلّص من الملف المؤقت دائماً (تفادي امتلاء cache)
+                    try { file.delete() } catch (_: Exception) {}
                 }
                 // إشعار التقدم كل 10 ملفات
                 if (processed % 10 == 0 || processed == total) {
@@ -52,6 +55,11 @@ class BatchScanWorker(context: Context, params: WorkerParameters) :
                     )
                 }
             }
+
+            // تنظيف المجلد المؤقت بالكامل بعد الانتهاء
+            try {
+                File(context.cacheDir, "batch_scan").deleteRecursively()
+            } catch (_: Exception) {}
 
             Result.success(
                 androidx.work.workDataOf(

@@ -7,19 +7,23 @@ import androidx.room.PrimaryKey
 /**
  * كيان سجل الإيصال في قاعدة بيانات Room.
  *
- * مستقل عن نموذج [com.azzam.receiptscanner.model.Transfer] (الذي يبقى
- * مسؤولاً عن التخزين المشفّر القديم)، لكنه يحمل نفس الحقول الأساسية +
- * حقل المحرك المستخدم.
- *
- * فهارس [indices] على senderName/recipientName تُسرّع استعلامات "كشف
- * الحسابات" (Group By) التي تُجمّع الحوالات بالاسم.
+ * تحسين: إضافة فهارس مركّبة على (senderName, amount) و(recipientName, amount)
+ * لتسريع استعلامات كشف الحسابات والإحصائيات حتى مع آلاف السجلات.
  */
 @Entity(
     tableName = "receipts",
     indices = [
         Index(value = ["senderName"]),
         Index(value = ["recipientName"]),
-        Index(value = ["date"])
+        Index(value = ["date"]),
+        Index(value = ["bankId"]),
+        Index(value = ["processedAt"]),
+        Index(value = ["amount"]),
+        Index(value = ["confidence"]),
+        // فهارس مركّبة لتسريع التجميع الشائع
+        Index(value = ["senderName", "amount"]),
+        Index(value = ["recipientName", "amount"]),
+        Index(value = ["bankId", "amount"])
     ]
 )
 data class ReceiptData(
@@ -39,7 +43,6 @@ data class ReceiptData(
 ) {
     /**
      * يُرجع الاسم "الفعّال" للسجل — المستلم إن وُجد وإلا المرسل.
-     * مفيد لتجميع كشف الحسابات: نُجمّع كل حوالات الشخص سواء كان مرسلاً أو مستلماً.
      */
     fun effectiveName(): String? =
         recipientName?.takeIf { it.isNotBlank() } ?: senderName?.takeIf { it.isNotBlank() }

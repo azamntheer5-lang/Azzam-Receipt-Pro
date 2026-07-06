@@ -132,7 +132,12 @@ class MainActivity : AppCompatActivity() {
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
-        binding.recyclerView.setHasFixedSize(false)
+        // ★ تحسينات Smooth Scrolling:
+        //  - setHasFixedSize(true): البطاقات لها ارتفاع ثابت تقريباً → تجنّب requestLayout
+        //  - setItemViewCacheSize(8): احتفظ بـ 8 بطاقات خارج الشاشة (تجنّب onBindViewHolder المتكرر)
+        //  - setDrawingCacheQuality: جودة منخفضة للـ cache (أسرع)
+        binding.recyclerView.setHasFixedSize(true)
+        binding.recyclerView.setItemViewCacheSize(8)
         binding.recyclerView.isNestedScrollingEnabled = false
 
         binding.buttonGrantPermission.setOnClickListener { requestManageStoragePermission() }

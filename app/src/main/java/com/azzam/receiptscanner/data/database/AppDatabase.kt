@@ -19,7 +19,7 @@ import com.azzam.receiptscanner.data.entity.ReceiptData
  */
 @Database(
     entities = [ReceiptData::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

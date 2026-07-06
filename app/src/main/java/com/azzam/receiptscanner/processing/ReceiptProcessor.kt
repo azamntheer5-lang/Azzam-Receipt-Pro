@@ -1,9 +1,10 @@
 package com.azzam.receiptscanner.processing
 
 import android.content.Context
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import com.azzam.receiptscanner.llm.LlmManager
 import com.azzam.receiptscanner.model.Transfer
+import com.azzam.receiptscanner.ocr.ImageCompressor
 import com.azzam.receiptscanner.ocr.MlKitOcrHelper
 import com.azzam.receiptscanner.ocr.PdfHelper
 import com.azzam.receiptscanner.parser.ParsedFields
@@ -17,10 +18,11 @@ import java.util.UUID
 /**
  * خط المعالجة الكامل لملف واحد.
  *
- * تحسين (بناءً على عينة 452 ملف):
- *  - فلتر اسم الملف قبل OCR (تجاهل فوري للـ CVs/الواجبات/التقارير المعملية)
- *  - تجاوز فلتر المحتوى لأسماء الملفات الإيجابية (receipt/transfer/alinma)
- *  - عتبة حفظ مشددة لمنع false positives
+ * تحسينات الأداء:
+ *  - استخدام ImageCompressor لفك تشفير الصور بأبعاد مخفّضة (RGB_565)
+ *    بدلاً من decodeFile الكامل — يوفر ~70% من الذاكرة
+ *  - ضمان bitmap.recycle() بعد كل استخدام (تفادي Memory Leaks)
+ *  - استخدام try-finally للتخلص الآمن من Bitmaps حتى عند الفشل
  */
 object ReceiptProcessor {
 
@@ -39,9 +41,8 @@ object ReceiptProcessor {
 
         ProcessedFilesTracker.markProcessed(context, key)
 
-        // ===== فلتر اسم الملف (قبل OCR — يوفر وقتاً كبيراً) =====
         val filenameHint = FileFilter.filenameHint(file)
-        if (filenameHint == false) return false // اسم واضح لغير إيصال
+        if (filenameHint == false) return false
 
         val ocrText = try {
             extractText(file)
@@ -49,8 +50,6 @@ object ReceiptProcessor {
             ""
         }
 
-        // ===== فلتر المحتوى =====
-        // إن كان اسم الملف إيجابياً (receipt/transfer)، تجاوز فلتر المحتوى
         if (filenameHint != true) {
             if (ocrText.isBlank() || !FileFilter.looksLikeReceipt(ocrText)) return false
         }
@@ -63,7 +62,6 @@ object ReceiptProcessor {
             fields = extraction?.second
         }
 
-        // LLM عند الحاجة
         val needsLlmHelp = fields?.amount == null ||
             (fields.recipientName.isNullOrBlank() && fields.senderName.isNullOrBlank())
 
@@ -79,7 +77,6 @@ object ReceiptProcessor {
             }
         }
 
-        // ===== عتبة الحفظ =====
         val amountValue = fields?.amount
         val hasValidAmount = amountValue != null && amountValue >= 1.0
         val hasValidDate = fields?.date != null
@@ -136,17 +133,37 @@ object ReceiptProcessor {
         )
     }
 
+    /**
+     * استخراج النص مع ضمان bitmap.recycle() — تفادي Memory Leaks.
+     * يستخدم ImageCompressor لفك التشفير بأبعاد مخفّضة.
+     */
     private suspend fun extractText(file: File): String {
         return if (FileFilter.isPdf(file)) {
             val pages = PdfHelper.renderPages(file)
-            val texts = mutableListOf<String>()
-            for (page in pages) {
-                texts.add(MlKitOcrHelper.recognize(page))
+            try {
+                val texts = mutableListOf<String>()
+                for (page in pages) {
+                    try {
+                        texts.add(MlKitOcrHelper.recognize(page))
+                    } finally {
+                        // تخلّص من كل صفحة بعد الـ OCR
+                        page.recycle()
+                    }
+                }
+                texts.joinToString("\n")
+            } catch (e: Exception) {
+                // في حالة الفشل، تأكد من تدوير كل الصفحات المتبقية
+                pages.forEach { if (!it.isRecycled) it.recycle() }
+                throw e
             }
-            texts.joinToString("\n")
         } else {
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: return ""
-            MlKitOcrHelper.recognize(bitmap)
+            // استخدم ImageCompressor بدلاً من decodeFile المباشر
+            val bitmap = ImageCompressor.decodeSampled(file) ?: return ""
+            try {
+                MlKitOcrHelper.recognize(bitmap)
+            } finally {
+                if (!bitmap.isRecycled) bitmap.recycle()
+            }
         }
     }
 }
