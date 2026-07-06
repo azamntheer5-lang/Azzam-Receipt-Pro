@@ -343,11 +343,14 @@ class MainActivity : AppCompatActivity() {
         val serviceIntent = Intent(this, ReceiptWatcherService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
         PeriodicScanWorker.schedule(this)
+        // ★ فحص فوري تلقائي عند بدء التطبيق — يضمن أن الإيصالات تظهر فوراً
+        PeriodicScanWorker.triggerImmediateScan(this)
+        Toast.makeText(this, R.string.auto_scan_started, Toast.LENGTH_LONG).show()
     }
 
     private fun triggerManualScan() {
-        val request = OneTimeWorkRequestBuilder<PeriodicScanWorker>().build()
-        WorkManager.getInstance(this).enqueue(request)
+        // ★ استخدم triggerImmediateScan للفحص الفوري العميق
+        PeriodicScanWorker.triggerImmediateScan(this)
         toast(R.string.scan_started)
     }
 

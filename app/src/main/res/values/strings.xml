@@ -4,6 +4,8 @@
     <string name="permission_required_desc">التطبيق يحتاج صلاحية الوصول الكامل للملفات حتى يراقب مجلد واتساب تلقائياً ويكتشف الإيصالات الجديدة.</string>
     <string name="grant_permission">منح الصلاحية</string>
     <string name="scan_now">مسح الآن</string>
+    <string name="auto_scan_started">جارٍ الفحص التلقائي للإيصالات… ستحظر النتائج خلال لحظات</string>
+    <string name="scan_complete_count">تم فحص %1$d ملف. النتائج تظهر في القائمة.</string>
     <string name="total_label">إجمالي التحويلات</string>
     <string name="watcher_notification_title">مراقبة إيصالات واتساب نشطة</string>
     <string name="watcher_notification_desc">يتم فحص الملفات الجديدة تلقائياً في الخلفية</string>
