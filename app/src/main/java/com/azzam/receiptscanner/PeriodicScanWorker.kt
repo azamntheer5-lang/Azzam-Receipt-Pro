@@ -25,6 +25,9 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        // ★ أعد ضبط التشخيص قبل كل فحص
+        com.azzam.receiptscanner.processing.DiagnosticLogger.reset()
+
         // اجمع كل المسارات المرشّحة
         val allPaths = mutableListOf<String>().apply {
             addAll(ReceiptWatcherService.WHATSAPP_PATHS)
@@ -36,18 +39,13 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
             add("/storage/emulated/0/WhatsApp/Media")
         }.distinct()
 
-        var scannedCount = 0
-        var savedCount = 0
-        val foundPaths = mutableListOf<String>()
-
+        var foundPaths = 0
         for (path in allPaths) {
             val dir = File(path)
             if (!dir.exists() || !dir.isDirectory) continue
-            foundPaths.add(path)
+            foundPaths++
             try {
-                val result = scanRecursive(dir, depth = 5)
-                scannedCount += result.first
-                savedCount += result.second
+                scanRecursive(dir, depth = 5)
             } catch (e: SecurityException) {
                 continue
             } catch (e: Exception) {
@@ -55,20 +53,12 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
             }
         }
 
-        // ★ تشخيص واضح للمستخدم
-        val message = when {
-            savedCount > 0 -> applicationContext.getString(
-                R.string.scan_success_with_results, scannedCount, savedCount
-            )
-            scannedCount > 0 -> applicationContext.getString(
-                R.string.scan_no_receipts, scannedCount
-            )
-            foundPaths.isEmpty() -> applicationContext.getString(R.string.scan_no_paths)
-            else -> applicationContext.getString(
-                R.string.scan_paths_found_no_files, foundPaths.size
-            )
+        // ★ أعرض التقرير التشخيصي الكامل
+        if (foundPaths == 0) {
+            notifyUser(applicationContext, "❌ لم نجد أي مجلدات. اذهب للقائمة → 📁 فحص مجلد كامل واختر مجلد الصور يدوياً.")
+        } else {
+            com.azzam.receiptscanner.processing.DiagnosticLogger.showReport(applicationContext)
         }
-        notifyUser(applicationContext, message)
 
         return Result.success()
     }
@@ -83,38 +73,30 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
 
     /**
      * فحص عميق (Recursive) للمجلدات الفرعية.
-     * @return Pair(scannedCount, savedCount)
      */
-    private suspend fun scanRecursive(dir: File, depth: Int, currentDepth: Int = 0): Pair<Int, Int> {
-        if (currentDepth > depth) return 0 to 0
-        if (!dir.exists() || !dir.isDirectory) return 0 to 0
+    private suspend fun scanRecursive(dir: File, depth: Int, currentDepth: Int = 0) {
+        if (currentDepth > depth) return
+        if (!dir.exists() || !dir.isDirectory) return
 
-        var scanned = 0
-        var saved = 0
         val children = try {
-            dir.listFiles() ?: return 0 to 0
+            dir.listFiles() ?: return
         } catch (e: SecurityException) {
-            return 0 to 0
+            return
         } catch (e: Exception) {
-            return 0 to 0
+            return
         }
 
         for (child in children) {
             try {
                 if (child.isDirectory) {
-                    val (s, sv) = scanRecursive(child, depth, currentDepth + 1)
-                    scanned += s
-                    saved += sv
+                    scanRecursive(child, depth, currentDepth + 1)
                 } else if (child.isFile) {
-                    val wasSaved = ReceiptProcessor.processFile(applicationContext, child)
-                    scanned++
-                    if (wasSaved) saved++
+                    ReceiptProcessor.processFile(applicationContext, child)
                 }
             } catch (e: Exception) {
                 // تجاهل الأخطاء الفردية، تابع
             }
         }
-        return scanned to saved
     }
 
     companion object {
