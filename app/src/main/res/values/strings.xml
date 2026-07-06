@@ -1,0 +1,133 @@
+<resources>
+    <string name="app_name">Receipt Scanner Pro</string>
+    <string name="permission_required_title">صلاحية الوصول للملفات مطلوبة</string>
+    <string name="permission_required_desc">التطبيق يحتاج صلاحية الوصول الكامل للملفات حتى يراقب مجلد واتساب تلقائياً ويكتشف الإيصالات الجديدة.</string>
+    <string name="grant_permission">منح الصلاحية</string>
+    <string name="scan_now">مسح الآن</string>
+    <string name="total_label">إجمالي التحويلات</string>
+    <string name="watcher_notification_title">مراقبة إيصالات واتساب نشطة</string>
+    <string name="watcher_notification_desc">يتم فحص الملفات الجديدة تلقائياً في الخلفية</string>
+    <string name="empty_list">لا توجد إيصالات بعد — اسحب إيصالاً من واتساب أو اضغط \"مسح الآن\"</string>
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+
+    <string name="menu_statements">🧾 كشف الحسابات</string>
+    <string name="menu_analytics">📊 تحليلات ورسوم بيانية</string>
+    <string name="menu_export_csv">📄 تصدير Excel (CSV)</string>
+    <string name="menu_export_pdf">📑 تصدير تقرير PDF</string>
+    <string name="menu_backup">☁️ نسخ احتياطي</string>
+    <string name="menu_restore">📥 استعادة نسخة احتياطية</string>
+    <string name="menu_settings">⚙️ الإعدادات والذكاء الاصطناعي</string>
+
+    <string name="analytics_title">التحليلات</string>
+    <string name="analytics_monthly_title">الإجمالي الشهري</string>
+    <string name="analytics_top_title">أكثر الجهات تكراراً</string>
+    <string name="analytics_no_data">لا توجد بيانات كافية بعد لعرض تحليلات</string>
+
+    <string name="search_hint">ابحث بالاسم أو البنك…</string>
+    <string name="count_format">%d إيصال</string>
+    <string name="widget_subtitle_format">%d إيصال</string>
+    <string name="widget_total_label">إجمالي الحوالات</string>
+    <string name="widget_alert_format">⚠️ %d يحتاج مراجعة</string>
+    <string name="main_needs_review_format">⚠️ %d سجل يحتاج مراجعة يدوية</string>
+
+    <string name="field_sender">اسم المرسل</string>
+    <string name="field_recipient">اسم المستلم</string>
+    <string name="field_amount">المبلغ</string>
+    <string name="field_date">التاريخ</string>
+    <string name="edit_transfer_title">تعديل السجل</string>
+    <string name="delete">حذف</string>
+
+    <!-- نافذة التعديل المُطوّرة -->
+    <string name="edit_context_source">المصدر: %1$s</string>
+    <string name="edit_raw_text_section">النص الخام المستخرَج (للمراجعة)</string>
+    <string name="edit_raw_text_empty">لا يوجد نص خام متاح</string>
+
+    <!-- بطاقة القائمة (المرحلة 3) -->
+    <string name="card_from_label">من</string>
+    <string name="card_to_label">إلى</string>
+    <string name="card_unknown_name">غير معروف</string>
+    <string name="confidence_high">ثقة عالية</string>
+    <string name="confidence_medium">ثقة متوسطة</string>
+    <string name="confidence_low">راجع يدوياً</string>
+    <string name="confidence_low_short">راجع</string>
+
+    <!-- الواجهة الجديدة (الإعادة الجذرية) -->
+    <string name="hero_total_label">إجمالي الحوالات</string>
+    <string name="recent_transfers_title">الحوالات الأخيرة</string>
+    <string name="currency_sar">ر.س</string>
+    <string name="scan_started">جارٍ المسح في الخلفية…</string>
+
+    <!-- شريط التنقل السفلي -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_statements">كشف الحسابات</string>
+    <string name="nav_analytics">التحليلات</string>
+    <string name="nav_settings">الإعدادات</string>
+
+    <string name="backup_password_title">كلمة مرور النسخة الاحتياطية</string>
+    <string name="backup_password_desc">اختر كلمة مرور لحماية النسخة الاحتياطية. احفظها جيداً - بدونها لن تقدر تستعيد البيانات لاحقاً.</string>
+    <string name="restore_password_title">كلمة مرور الاستعادة</string>
+    <string name="restore_password_desc">أدخل كلمة المرور التي استخدمتها عند إنشاء هذه النسخة الاحتياطية.</string>
+    <string name="restore_confirm_title">تحذير: استبدال كامل للبيانات</string>
+    <string name="restore_confirm_desc">استعادة نسخة احتياطية ستحذف كل السجلات الحالية وتستبدلها بمحتوى الملف المختار. هل تريد المتابعة؟</string>
+    <string name="confirm">متابعة</string>
+
+    <string name="export_success">تم التصدير، اختر تطبيقاً للمشاركة/الحفظ</string>
+    <string name="export_failed">فشل التصدير</string>
+    <string name="backup_success">تم إنشاء النسخة الاحتياطية بنجاح</string>
+    <string name="backup_failed">فشل إنشاء النسخة الاحتياطية</string>
+    <string name="restore_success">تمت الاستعادة بنجاح</string>
+    <string name="restore_failed">فشلت الاستعادة - تحقق من كلمة المرور أو الملف</string>
+
+    <!-- ===== شاشة الإعدادات (المرحلة 2) ===== -->
+    <string name="settings_title">الإعدادات والذكاء الاصطناعي</string>
+    <string name="settings_ai">مفتاح API</string>
+    <string name="settings_active_engine_title">المحرك النشط</string>
+    <string name="settings_active_engine_desc">اختر محرك الذكاء الاصطناعي المستخدم عند الحاجة لاستخراج البيانات الفوضوية. المحرك النشط فقط هو من يُستدعى.</string>
+    <string name="settings_active_engine_hint">اختر المحرك</string>
+    <string name="settings_keys_section">مفاتيح API</string>
+    <string name="settings_key_hint">أدخل المفتاح هنا</string>
+    <string name="settings_clear_key">حذف</string>
+    <string name="settings_security_note">🔒 جميع المفاتيح مخزّنة مشفّرة بـ AES-256 عبر Android Keystore على جهازك فقط. لا تُرسل لأي خادم وسيط.</string>
+    <string name="settings_engine_set">تم تعيين المحرك النشط: %1$s</string>
+    <string name="settings_key_saved">تم حفظ مفتاح %1$s</string>
+    <string name="settings_key_cleared">تم حذف مفتاح %1$s</string>
+
+    <!-- أسماء وأوصاف المحركات -->
+    <string name="engine_claude_name">Claude (Anthropic)</string>
+    <string name="engine_claude_desc">دقة عالية للعربية. احصل على المفتاح من console.anthropic.com</string>
+    <string name="engine_gemini_name">Gemini (Google)</string>
+    <string name="engine_gemini_desc">سريع ويدعم العربية بقوة. احصل على المفتاح من aistudio.google.com</string>
+    <string name="engine_groq_name">Groq (Llama)</string>
+    <string name="engine_groq_desc">استدلال فائق السرعة. احصل على المفتاح من console.groq.com</string>
+    <string name="engine_hf_name">Hugging Face</string>
+    <string name="engine_hf_desc">طبقة مجانية محدودة. احصل على المفتاح من huggingface.co/settings/tokens</string>
+
+    <!-- ===== شاشة كشف الحسابات (المرحلة 2) ===== -->
+    <string name="statements_title">كشف الحسابات</string>
+    <string name="statements_summary_title">إجمالي كل الحوالات</string>
+    <string name="statements_empty">لا توجد أسماء بعد. اسحب إيصالات من واتساب أو اضغط مسح الآن.</string>
+    <string name="statements_count_format">%d حوالة</string>
+    <string name="statements_people_count">%d شخص/جهة</string>
+
+    <!-- أدوار الأشخاص -->
+    <string name="role_both">مرسِل + مستلِم</string>
+    <string name="role_sender">مرسِل</string>
+    <string name="role_recipient">مستلِم</string>
+    <string name="role_both_full">يرسل ويستلم</string>
+    <string name="role_sender_full">مرسِل فقط</string>
+    <string name="role_recipient_full">مستلِم فقط</string>
+
+    <!-- ===== شاشة تفاصيل كشف الحساب ===== -->
+    <string name="detail_title">تفاصيل كشف الحساب</string>
+    <string name="detail_total_sent">أرسل</string>
+    <string name="detail_total_received">استلم</string>
+    <string name="detail_count">عدد الحوالات</string>
+    <string name="detail_transfers_list">تفاصيل الحوالات</string>
+    <string name="detail_empty">لا توجد حوالات لهذا الاسم</string>
+
+    <!-- قديمة (للتوافق الخلفي) -->
+    <string name="api_key_dialog_title">مفتاح Claude API (اختياري)</string>
+    <string name="api_key_dialog_desc">مهمل — استخدم شاشة الإعدادات الجديدة.</string>
+    <string name="remove_key">حذف المفتاح</string>
+</resources>
