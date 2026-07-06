@@ -5,8 +5,11 @@ import android.graphics.Bitmap
 import com.azzam.receiptscanner.llm.LlmManager
 import com.azzam.receiptscanner.model.Transfer
 import com.azzam.receiptscanner.ocr.ImageCompressor
+import com.azzam.receiptscanner.ocr.ImagePreprocessor
 import com.azzam.receiptscanner.ocr.MlKitOcrHelper
 import com.azzam.receiptscanner.ocr.PdfHelper
+import com.azzam.receiptscanner.parser.BankMatcher
+import com.azzam.receiptscanner.parser.DataSanitizer
 import com.azzam.receiptscanner.parser.ParsedFields
 import com.azzam.receiptscanner.parser.ParserRegistry
 import com.azzam.receiptscanner.storage.ApiKeyStore
@@ -89,6 +92,9 @@ object ReceiptProcessor {
         }
         if (!shouldSave) return false
 
+        // ★ تصحيح bankId عبر Fuzzy Matching (BankMatcher)
+        bankId = BankMatcher.normalizeBankId(bankId)
+
         val transfer = Transfer(
             id = UUID.randomUUID().toString(),
             senderName = fields?.senderName,
@@ -125,17 +131,19 @@ object ReceiptProcessor {
         original: ParsedFields?,
         llm: com.azzam.receiptscanner.llm.LlmExtractionResult
     ): ParsedFields {
+        // ★ تطبيق DataSanitizer على نتيجة LLM قبل الدمج
+        val sanitized = DataSanitizer.sanitize(llm)
         return ParsedFields(
-            senderName = original?.senderName?.takeIf { it.isNotBlank() } ?: llm.senderName,
-            recipientName = original?.recipientName?.takeIf { it.isNotBlank() } ?: llm.receiverName,
-            amount = original?.amount ?: llm.amount,
-            date = original?.date?.takeIf { it.isNotBlank() } ?: llm.date
+            senderName = original?.senderName?.takeIf { it.isNotBlank() } ?: sanitized.senderName,
+            recipientName = original?.recipientName?.takeIf { it.isNotBlank() } ?: sanitized.recipientName,
+            amount = original?.amount ?: sanitized.amount,
+            date = original?.date?.takeIf { it.isNotBlank() } ?: sanitized.date
         )
     }
 
     /**
      * استخراج النص مع ضمان bitmap.recycle() — تفادي Memory Leaks.
-     * يستخدم ImageCompressor لفك التشفير بأبعاد مخفّضة.
+     * يستخدم ImagePreprocessor (تدرج رمادي + تباين + binarization) لتحسين دقة OCR.
      */
     private suspend fun extractText(file: File): String {
         return if (FileFilter.isPdf(file)) {
@@ -144,21 +152,22 @@ object ReceiptProcessor {
                 val texts = mutableListOf<String>()
                 for (page in pages) {
                     try {
-                        texts.add(MlKitOcrHelper.recognize(page))
+                        // ★ طبّق المعالجة المتقدمة على كل صفحة PDF
+                        val processed = ImagePreprocessor.preprocessBitmap(page)
+                        texts.add(MlKitOcrHelper.recognize(processed))
+                        processed.recycle()
                     } finally {
-                        // تخلّص من كل صفحة بعد الـ OCR
                         page.recycle()
                     }
                 }
                 texts.joinToString("\n")
             } catch (e: Exception) {
-                // في حالة الفشل، تأكد من تدوير كل الصفحات المتبقية
                 pages.forEach { if (!it.isRecycled) it.recycle() }
                 throw e
             }
         } else {
-            // استخدم ImageCompressor بدلاً من decodeFile المباشر
-            val bitmap = ImageCompressor.decodeSampled(file) ?: return ""
+            // ★ استخدم ImagePreprocessor بدلاً من decodeSampled المباشر
+            val bitmap = ImagePreprocessor.preprocess(file) ?: return ""
             try {
                 MlKitOcrHelper.recognize(bitmap)
             } finally {
