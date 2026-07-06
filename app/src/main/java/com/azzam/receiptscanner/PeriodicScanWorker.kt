@@ -42,7 +42,7 @@ class PeriodicScanWorker(context: Context, params: WorkerParameters) :
             val dir = File(path)
             if (!dir.exists() || !dir.isDirectory) continue
             try {
-                scannedCount += scanRecursive(dir, maxDepth = 5)
+                scannedCount += scanRecursive(dir, depth = 5)
             } catch (e: SecurityException) {
                 continue
             } catch (e: Exception) {
