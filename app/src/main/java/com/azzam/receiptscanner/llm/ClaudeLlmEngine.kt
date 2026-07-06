@@ -94,8 +94,8 @@ class ClaudeLlmEngine : LlmEngine {
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) return null
             val responseText = response.body?.string() ?: return null
-            val content = json.parseToJsonElement(responseText).jsonObject
-                ["content"]?.jsonArray ?: return null
+            val content = json.parseToJsonElement(responseText)
+                .jsonObject["content"]?.jsonArray ?: return null
             val text = content.joinToString("") { block ->
                 val obj = block.jsonObject
                 if (obj["type"]?.jsonPrimitive?.contentOrNull == "text")
