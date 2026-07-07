@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity() {
         val tempDir = java.io.File(cacheDir, "scan_temp").apply { mkdirs() }
         var scanned = 0
 
-        fun traverse(dir: androidx.documentfile.provider.DocumentFile, depth: Int) {
+        suspend fun traverse(dir: androidx.documentfile.provider.DocumentFile, depth: Int) {
             if (depth > 8) return
             val children = try { dir.listFiles() } catch (e: Exception) { return }
             for (child in children) {
